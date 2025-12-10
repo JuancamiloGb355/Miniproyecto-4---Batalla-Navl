@@ -1,128 +1,257 @@
 package edu.univalle.battleship.controller;
 
-import edu.univalle.battleship.model.*;
 import javafx.fxml.FXML;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class PositionController {
 
-    @FXML private GridPane gridBoard;
-    @FXML private Button btnOrientation;
+    private boolean horizontal = false;
+    private final int[][] board = new int[10][10]; // 0 = empty, 1 = occupied
 
-    private Orientation currentOrientation = Orientation.HORIZONTAL;
-    private Board playerBoard;
-    private List<Ship> shipsToPlace;
-    private int currentShipIndex = 0;
+    private final Map<String, Integer> shipSizes = Map.of(
+            "carrier.png", 4,
+            "submarine.png", 3,
+            "destroyer.png", 2,
+            "plane.png", 1
+    );
+
+    private final Map<String, Integer> shipLimits = Map.of(
+            "carrier.png", 1,
+            "submarine.png", 2,
+            "destroyer.png", 3,
+            "plane.png", 4
+    );
+
+
+    @FXML
+    private GridPane playerBoard;
+
+    @FXML
+    private HBox fleetBox;
+
+    @FXML
+    private Button btnOrientation;
 
     @FXML
     public void initialize() {
-        playerBoard = new Board();
-        shipsToPlace = createFleet();
 
-        initGrid();
-        initEvents();
-        initOrientationButton();
-    }
-
-    private void initOrientationButton() {
+        System.out.println("PositionController initialized");
         btnOrientation.setOnAction(e -> {
-            currentOrientation = (currentOrientation == Orientation.HORIZONTAL)
-                    ? Orientation.VERTICAL
-                    : Orientation.HORIZONTAL;
-
-            btnOrientation.setText(
-                    currentOrientation == Orientation.HORIZONTAL ?
-                            "Horizontal" : "Vertical"
-            );
+            horizontal = !horizontal;
+            btnOrientation.setText(horizontal ? "Horizontal" : "Vertical");
         });
+
+        setupGrid();
+        renderBoard();   // Create 10×10 board
+        loadFleet();     // Add ships to bottom HBox
     }
 
-    private List<Ship> createFleet() {
-        List<Ship> fleet = new ArrayList<>();
-        fleet.add(new Ship("Carrier", 4));
-        fleet.add(new Ship("Submarine 1", 3));
-        fleet.add(new Ship("Submarine 2", 3));
-        fleet.add(new Ship("Destroyer 1", 2));
-        fleet.add(new Ship("Destroyer 2", 2));
-        fleet.add(new Ship("Destroyer 3", 2));
-        fleet.add(new Ship("Patrol Boat 1", 1));
-        fleet.add(new Ship("Patrol Boat 2", 1));
-        fleet.add(new Ship("Patrol Boat 3", 1));
-        fleet.add(new Ship("Patrol Boat 4", 1));
-        return fleet;
+    private void setupGrid() {
+        for (int i = 0; i < 10; i++) {
+            ColumnConstraints col = new ColumnConstraints(40); // ancho fijo
+            col.setHgrow(Priority.NEVER);
+
+            RowConstraints row = new RowConstraints(40); // alto fijo
+            row.setVgrow(Priority.NEVER);
+
+            playerBoard.getColumnConstraints().add(col);
+            playerBoard.getRowConstraints().add(row);
+        }
     }
 
-    private void initGrid() {
-        for (int row = 0; row < 10; row++) {
-            for (int col = 0; col < 10; col++) {
+
+     //------------------------------
+     //CREATE GRID BOARD
+     //------------------------------
+    private void renderBoard() {
+        int size = 10;
+        int cellSize = 40;
+
+        for (int r = 0; r < size; r++) {
+            for (int c = 0; c < size; c++) {
+
                 StackPane cell = new StackPane();
-                cell.setPrefSize(40, 40);
-                cell.setStyle("-fx-background-color: #BEEBFF;");
-                gridBoard.add(cell, col, row);
+                Rectangle rect = new Rectangle(cellSize, cellSize);
+                rect.setFill(Color.LIGHTBLUE);
+                rect.setStroke(Color.BLACK);
+
+                cell.getChildren().add(rect);
+
+                // Accept drops
+                cell.setOnDragOver(event -> {
+                    if (event.getGestureSource() != cell && event.getDragboard().hasString()) {
+                        event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                    }
+                    event.consume();
+                });
+
+                cell.setOnDragDropped(event -> handleDrop(event, cell));
+
+                playerBoard.add(cell, c, r);
             }
         }
     }
 
-    private void initEvents() {
-        for (var node : gridBoard.getChildren()) {
-            StackPane cell = (StackPane) node;
+    //----------------------------
+    // LOAD SHIPS IN THE FLEET BOX
+    //------------------------------
+    private void loadFleet() {
 
-            cell.setOnMouseClicked(event -> {
-                int row = GridPane.getRowIndex(cell);
-                int col = GridPane.getColumnIndex(cell);
+        for (String fileName : shipLimits.keySet()) {
 
-                handlePlacement(row, col);
-            });
-        }
-    }
+            int copies = shipLimits.get(fileName);
 
-    private void handlePlacement(int row, int col) {
-        if (currentShipIndex >= shipsToPlace.size()) return;
-
-        Ship ship = shipsToPlace.get(currentShipIndex);
-
-        if (!playerBoard.canPlace(ship, row, col, currentOrientation)) {
-            System.out.println("Invalid placement.");
-            return;
-        }
-
-        ship.place(row, col, currentOrientation);
-        playerBoard.placeShip(ship);
-        paintShip(ship);
-
-        currentShipIndex++;
-
-        if (currentShipIndex == shipsToPlace.size()) {
-            System.out.println("All ships placed successfully.");
-        }
-    }
-
-    private void paintShip(Ship ship) {
-        int row = ship.getRow();
-        int col = ship.getColumn();
-        int size = ship.getSize();
-
-        int dx = (ship.getOrientation() == Orientation.VERTICAL) ? 1 : 0;
-        int dy = (ship.getOrientation() == Orientation.HORIZONTAL) ? 1 : 0;
-
-        for (int i = 0; i < size; i++) {
-            StackPane cell = getCell(row + i * dx, col + i * dy);
-            cell.setStyle("-fx-background-color: #2A6FB3;");
-        }
-    }
-
-    private StackPane getCell(int row, int col) {
-        for (var node : gridBoard.getChildren()) {
-            if (GridPane.getRowIndex(node) == row &&
-                    GridPane.getColumnIndex(node) == col) {
-                return (StackPane) node;
+            for (int i = 0; i < copies; i++) {
+                addShip(fileName);
             }
         }
-        return null;
     }
+
+    private void addShip(String fileName) {
+        Image img = new Image(getClass().getResourceAsStream(
+                "/edu/univalle/battleship/images/" + fileName
+        ));
+
+        int shipSize = shipSizes.get(fileName);
+
+        ImageView view = new ImageView(img);
+
+        // REAL SIZE (matching game board)
+        view.setFitWidth(40);
+        view.setFitHeight(shipSize * 40);
+        view.setPreserveRatio(false); // important!
+
+        // Start dragging
+        view.setOnDragDetected(event -> {
+            Dragboard db = view.startDragAndDrop(TransferMode.MOVE);
+
+            ClipboardContent content = new ClipboardContent();
+            content.putString(fileName);
+            db.setContent(content);
+
+            event.consume();
+        });
+
+        fleetBox.getChildren().add(view);
+    }
+
+
+
+     //------------------------------
+     // HANDLE DROP ON GRID CELL
+     //------------------------------
+    private void handleDrop(DragEvent event, StackPane cell) {
+        Dragboard db = event.getDragboard();
+        if (!db.hasString()) return;
+
+        String shipName = db.getString();
+        int shipSize = shipSizes.get(shipName);
+
+        int col = GridPane.getColumnIndex(cell);
+        int row = GridPane.getRowIndex(cell);
+
+        // ----------------------------------
+        // Validate ship doesn't go out of bounds
+        // ----------------------------------
+        if (horizontal) {
+            if (col + shipSize > 10) {
+                System.out.println("Ship out of bounds!");
+                return;
+            }
+        } else {
+            if (row + shipSize > 10) {
+                System.out.println("Ship out of bounds!");
+                return;
+            }
+        }
+
+        // ----------------------------------
+        // Validate no overlap
+        // ----------------------------------
+        for (int i = 0; i < shipSize; i++) {
+            int checkRow = row + (horizontal ? 0 : i);
+            int checkCol = col + (horizontal ? i : 0);
+
+            if (board[checkRow][checkCol] == 1) {
+                System.out.println("Ship overlaps another ship!");
+                return;
+            }
+        }
+
+        // ----------------------------------
+        // Place visually
+        // ----------------------------------
+        Image img = new Image(getClass().getResourceAsStream("/edu/univalle/battleship/images/" + shipName));
+        ImageView shipView = new ImageView(img);
+
+        if (horizontal) {
+            shipView.setRotate(-90);
+
+            shipView.setFitWidth(40);
+            shipView.setFitHeight(shipSize * 40);
+
+            // Calcular desplazamiento para alinear la punta después de rotar
+            double offset = (shipSize - 1) * 20.0;
+            shipView.setTranslateX(offset);
+            shipView.setTranslateY(0);
+
+        } else {
+            shipView.setRotate(0);
+
+            shipView.setFitWidth(40);
+            shipView.setFitHeight(shipSize * 40);
+
+            shipView.setTranslateX(0);
+            shipView.setTranslateY(0);
+        }
+
+        // Place image on the clicked cell
+        StackPane parentCell = cell;
+
+        GridPane.setColumnSpan(shipView, horizontal ? shipSize : 1);
+        GridPane.setRowSpan(shipView, horizontal ? 1 : shipSize);
+
+        playerBoard.getChildren().add(shipView);
+        GridPane.setColumnIndex(shipView, col);
+        GridPane.setRowIndex(shipView, row);
+
+        if (horizontal) {
+            GridPane.setColumnSpan(shipView, shipSize);
+        } else {
+            GridPane.setRowSpan(shipView, shipSize);
+        }
+
+        // ----------------------------------
+        // Mark board cells as occupied
+        // ----------------------------------
+        for (int i = 0; i < shipSize; i++) {
+            int r = row + (horizontal ? 0 : i);
+            int c = col + (horizontal ? i : 0);
+            board[r][c] = 1;
+        }
+
+        // ----------------------------------
+        // Remove the ship in the fleet
+        // ----------------------------------
+        Node source = (Node) event.getGestureSource();
+        fleetBox.getChildren().remove(source);
+
+
+        event.setDropCompleted(true);
+        event.consume();
+
+        System.out.println("Placed " + shipName + " at (" + row + "," + col + ")");
+    }
+
 }
