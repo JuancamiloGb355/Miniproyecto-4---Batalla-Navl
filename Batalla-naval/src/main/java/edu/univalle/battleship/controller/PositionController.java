@@ -1,5 +1,6 @@
 package edu.univalle.battleship.controller;
 
+import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
@@ -21,9 +22,13 @@ import java.util.Objects;
 
 public class PositionController {
 
+    PlaneTextFileHandler planeTextFileHandler;
+
     @FXML
     private void handleStartGame() {
         try {
+
+
             // Cargar el FXML del tablero del enemigo
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
                     "/edu/univalle/battleship/enemyPreviewView.fxml"));
@@ -34,6 +39,11 @@ public class PositionController {
             stage.setTitle("Opponent Board");
             stage.setScene(new Scene(root));
             stage.show();
+            OpponentController controller = (OpponentController) loader.getController();
+            String content = Integer.toString(controller.getNumberofsunkenships());
+            planeTextFileHandler = new PlaneTextFileHandler();
+            planeTextFileHandler.write("player_data.csv", content);
+
 
             // Opcional: cerrar la ventana de colocación de flota
             // ((Stage) btnStartGame.getScene().getWindow()).close();

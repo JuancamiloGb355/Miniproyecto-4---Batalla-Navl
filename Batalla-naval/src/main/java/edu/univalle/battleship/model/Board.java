@@ -71,7 +71,7 @@ public class Board implements Serializable {
             ship.hit();
 
             if (ship.isSunk()) {
-                return "sunk:" + ship.getName();
+                return "sunk: " + ship.getName();
             }
             return "hit";
         } else { // AGUA
@@ -116,6 +116,14 @@ public class Board implements Serializable {
         if (ship != null) return CellStatus.SHIP;
 
         return CellStatus.EMPTY;
+    }
+
+    public boolean[][] getMisses() {
+        return misses;
+    }
+
+    public boolean[][] getHits() {
+        return hits;
     }
 
 

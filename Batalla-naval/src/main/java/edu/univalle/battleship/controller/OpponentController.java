@@ -1,6 +1,7 @@
 package edu.univalle.battleship.controller;
 
 import edu.univalle.battleship.model.*;
+import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -8,18 +9,26 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 
+import java.io.IOException;
+
 public class OpponentController {
 
     @FXML
     private GridPane opponentBoard;
 
     private MachinePlayer machine;
+
     private Player human;
+
+    private int numberofsunkenships = 0;
+
+    private PlaneTextFileHandler planeTextFileHandler;
 
     @FXML
     public void initialize() {
         machine = new MachinePlayer();
         machine.placeFleetAutomatically(); // coloca la flota de la máquina
+        planeTextFileHandler = new PlaneTextFileHandler();
 
         createBoard();
 
@@ -120,6 +129,15 @@ public class OpponentController {
 
             default: // sunk:NombreDelBarco
                 if (result.startsWith("sunk:")) {
+                    numberofsunkenships++;
+                    String numberSunkenships = Integer.toString(numberofsunkenships);
+                    planeTextFileHandler = new PlaneTextFileHandler();
+                    try {
+                        planeTextFileHandler.write("player_data.csv", numberSunkenships);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                     String sunkShipName = result.split(":")[1];
                     Ship sunkShip = null;
                     for (Ship s : machine.getFleet()) {
@@ -167,5 +185,15 @@ public class OpponentController {
         img.setFitHeight(40);
         cell.getChildren().add(img);
     }
+
+    public void setNumberofsunkenships(int numberofsunkenships) {
+        this.numberofsunkenships = numberofsunkenships;
+    }
+
+    public int getNumberofsunkenships() {
+        return numberofsunkenships;
+    }
+
+
 
 }

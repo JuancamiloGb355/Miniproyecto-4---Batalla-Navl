@@ -1,6 +1,7 @@
 package edu.univalle.battleship.controller;
 
 import edu.univalle.battleship.model.StartModel;
+import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +12,11 @@ import javafx.event.ActionEvent;
 import java.io.IOException;
 
 public class StartController {
+
+    PlaneTextFileHandler planeTextFileHandler;
+
+
+
 
     @FXML
     private Button playButton;
@@ -36,8 +42,22 @@ public class StartController {
             stage.setScene(new Scene(root));
             stage.show();
 
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private Button continueButton;
+
+    @FXML
+    void handleContinue(ActionEvent event) {
+
+        String [] data = planeTextFileHandler.read("player_data.csv");
+
+
+
+
     }
 }

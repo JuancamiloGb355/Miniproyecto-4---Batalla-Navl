@@ -17,7 +17,7 @@ public class StartStage extends Stage {
         );
 
         Parent root = loader.load();
-        controller = loader.getController();
+
 
         Scene scene = new Scene(root, 600, 400);
         setScene(scene);
