@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="edu.univalle.battleship.controller.PositionController"
+            prefWidth="800" prefHeight="650">
+
+    <top>
+        <HBox spacing="20" alignment="CENTER">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <children>
+                <Label text="Place your fleet – Player Board" style="-fx-font-size: 20px;" />
+                <Button fx:id="btnOrientation" text="Vertical"/>
+            </children>
+        </HBox>
+    </top>
+
+    <!-- 10x10 board -->
+    <center>
+        <GridPane fx:id="playerBoard"
+                  hgap="1" vgap="1"
+                  style="-fx-background-color: black;">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </GridPane>
+    </center>
+
+    <!-- SHIP SELECTION AREA -->
+    <bottom>
+        <HBox fx:id="fleetBox"
+              alignment="CENTER"
+              spacing="15"
+              style="-fx-background-color: #D0E8FF;">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+        </HBox>
+    </bottom>
+
+</BorderPane>
