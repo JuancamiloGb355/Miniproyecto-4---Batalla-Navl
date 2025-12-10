@@ -5,10 +5,50 @@ public class Cell {
 // Tiene un estado: agua, barco, tocada, hundida, disparo fallido.
 
 
-// markHit(): marca que la celda fue golpeada.
-// markMiss(): registra un disparo fallido.
-// hasShip(): retorna si tiene barco.
-// isHit(): si fue golpeada.
+    private Ship ship;
+    private boolean hit;
+    private boolean miss;
 
 
+    public boolean hasShip() {
+        return ship != null;
+    }
+
+
+    public void setShip(Ship ship) {
+        this.ship = ship;
+    }
+
+
+    public boolean isHit() {
+        return hit;
+    }
+
+
+    public void markHit() {
+        this.hit = true;
+        this.miss = false;
+
+        if (ship != null) {
+            ship.hit();
+        }
+    }
+
+
+    public void markMiss() {
+        this.miss = true;
+        this.hit = false;
+    }
+
+
+    public boolean isMiss() {
+        return miss;
+    }
+
+
+    public Ship getShip() {
+        return ship;
+    }
 }
+
+

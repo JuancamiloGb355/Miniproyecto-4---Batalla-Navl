@@ -10,6 +10,9 @@ public class Ship implements Serializable {
     private int column;
     private Orientation orientation;
 
+    //golpes recibidos
+    private int hits = 0;
+
     public Ship(String name, int size) {
         this.name = name;
         this.size = size;
@@ -25,5 +28,26 @@ public class Ship implements Serializable {
         this.row = row;
         this.column = column;
         this.orientation = orientation;
+    }
+
+    //registrar un golpe
+    public void hit() {
+        if (hits < size) {
+            hits++;
+        }
+    }
+
+    // saber si esta hundido
+    public boolean isSunk() {
+        return hits >= size;
+    }
+
+
+    public boolean occupies(int r, int c) {
+        if (orientation == Orientation.HORIZONTAL) {
+            return r == row && c >= column && c < column + size;
+        } else {
+            return c == column && r >= row && r < row + size;
+        }
     }
 }
