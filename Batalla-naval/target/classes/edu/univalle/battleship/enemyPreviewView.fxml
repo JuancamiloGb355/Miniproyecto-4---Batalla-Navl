@@ -1,14 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="edu.univalle.battleship.controller.EnemyPreviewController"
-            prefHeight="400.0" prefWidth="600.0">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="edu.univalle.battleship.controller.OpponentController"
+            prefWidth="500" prefHeight="500">
 
-</AnchorPane>
+    <!-- Top bar -->
+    <top>
+        <HBox spacing="20" alignment="CENTER">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <children>
+                <Label text="Opponent Board – Fire!" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Button text="Restart" fx:id="btnRestart"/>
+            </children>
+        </HBox>
+    </top>
+
+    <!-- Center board -->
+    <center>
+        <GridPane fx:id="opponentBoard"
+                  hgap="1" vgap="1"
+                  style="-fx-background-color: black;">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </GridPane>
+    </center>
+
+    <!-- Bottom legend -->
+    <bottom>
+        <HBox spacing="10" alignment="CENTER">
+            <Label text="Legend:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+            <!-- Hit -->
+            <ImageView fitWidth="20" fitHeight="20">
+                <image>
+                    <Image url="@edu/univalle/battleship/images/hit.png"/>
+                </image>
+            </ImageView>
+            <Label text="Hit"/>
+
+            <!-- Miss -->
+            <ImageView fitWidth="20" fitHeight="20">
+                <image>
+                    <Image url="@edu/univalle/battleship/images/miss.png"/>
+                </image>
+            </ImageView>
+            <Label text="Miss"/>
+
+            <!-- Sunk -->
+            <ImageView fitWidth="20" fitHeight="20">
+                <image>
+                    <Image url="@edu/univalle/battleship/images/sink.png"/>
+                </image>
+            </ImageView>
+            <Label text="Sunk"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

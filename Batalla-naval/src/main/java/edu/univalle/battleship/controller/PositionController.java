@@ -1,8 +1,11 @@
 package edu.univalle.battleship.controller;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -10,11 +13,43 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
 public class PositionController {
+
+    @FXML
+    private void handleStartGame() {
+        try {
+            // Cargar el FXML del tablero del enemigo
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/edu/univalle/battleship/enemyPreviewView.fxml"));
+            Parent root = loader.load();
+
+            // Crear una nueva ventana
+            Stage stage = new Stage();
+            stage.setTitle("Opponent Board");
+            stage.setScene(new Scene(root));
+            stage.show();
+
+            // Opcional: cerrar la ventana de colocación de flota
+            // ((Stage) btnStartGame.getScene().getWindow()).close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @FXML
+    private Button btnStartGame;
+
+    private int totalShipsToPlace = 10;
+    private int shipsPlaced = 0;
+
 
     private boolean horizontal = false;
     private final int[][] board = new int[10][10]; // 0 = empty, 1 = occupied
@@ -246,12 +281,17 @@ public class PositionController {
         // ----------------------------------
         Node source = (Node) event.getGestureSource();
         fleetBox.getChildren().remove(source);
-
+        shipsPlaced++;
 
         event.setDropCompleted(true);
         event.consume();
 
         System.out.println("Placed " + shipName + " at (" + row + "," + col + ")");
+
+        // Mostrar botón Start Game si ya se colocaron todos los barcos
+        if (shipsPlaced >= totalShipsToPlace) {
+            btnStartGame.setVisible(true);
+        }
     }
 
 }
