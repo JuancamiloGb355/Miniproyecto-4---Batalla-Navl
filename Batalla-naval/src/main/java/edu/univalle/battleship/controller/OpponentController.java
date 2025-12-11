@@ -6,8 +6,10 @@ import javafx.fxml.FXML;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 
@@ -15,6 +17,9 @@ public class OpponentController {
 
     @FXML
     private GridPane opponentBoard;
+
+    @FXML
+    BorderPane root;
 
     private MachinePlayer machine;
     private Player human;
@@ -134,6 +139,12 @@ public class OpponentController {
                 if (result.startsWith("sunk:")) {
 
                     numberofsunkenships++;
+                    if (numberofsunkenships >= 10){
+                        System.out.println("¡Has ganado el juego!");
+                        Stage stage = (Stage) root.getScene().getWindow();
+                        stage.close();
+
+                    }
                     try {
                         planeTextFileHandler.write("player_data.csv", Integer.toString(numberofsunkenships));
                     } catch (IOException e) {

@@ -52,9 +52,23 @@ public class StartController {
     private Button continueButton;
 
     @FXML
-    void handleContinue(ActionEvent event) {
+    void handleContinue(ActionEvent event) throws IOException {
+        planeTextFileHandler = new PlaneTextFileHandler();
 
         String [] data = planeTextFileHandler.read("player_data.csv");
+        int numberofSsunkenships = Integer.parseInt(data[0]);
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/edu/univalle/battleship/enemyPreviewView.fxml"));
+        Parent root = loader.load();
+        OpponentController controller = loader.getController();
+        controller.setNumberofsunkenships(numberofSsunkenships);
+        Stage stage = new Stage();
+        stage.setTitle("Opponent Board");
+        stage.setScene(new Scene(root));
+        stage.show();
+
+        System.out.println(controller.getNumberofsunkenships());
 
 
 
