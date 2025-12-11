@@ -17,7 +17,6 @@ public class OpponentController {
     private GridPane opponentBoard;
 
     private MachinePlayer machine;
-
     private Player human;
 
     private int numberofsunkenships = 0;
@@ -26,13 +25,17 @@ public class OpponentController {
 
     @FXML
     public void initialize() {
-        machine = new MachinePlayer();
-        machine.placeFleetAutomatically(); // coloca la flota de la máquina
+
+        // ⬅️ Obtener jugadores desde GameManager
+        GameManager gm = GameManager.getInstance();
+        this.human = gm.getHuman();
+        this.machine = gm.getMachine();
+
         planeTextFileHandler = new PlaneTextFileHandler();
 
         createBoard();
 
-        // Espera a que el GridPane tenga una Scene
+        // Tecla para mostrar barcos (debug)
         opponentBoard.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 newScene.setOnKeyPressed(event -> {
@@ -44,20 +47,16 @@ public class OpponentController {
         });
     }
 
-
-    // Metodo para mostrar todos los barcos en el GridPane
+    // ---------------------------
+    // DIBUJAR BARCOS (debug)
+    // ---------------------------
     private void revealShips() {
         for (Ship ship : machine.getFleet()) {
-            String imgName;
-            if (ship.getName().toLowerCase().contains("carrier")) {
-                imgName = "carrier.png";
-            } else if (ship.getName().toLowerCase().contains("submarine")) {
-                imgName = "submarine.png";
-            } else if (ship.getName().toLowerCase().contains("destroyer")) {
-                imgName = "destroyer.png";
-            } else { // patrol
-                imgName = "plane.png";
-            }
+            String imgName =
+                    ship.getName().toLowerCase().contains("carrier") ? "carrier.png" :
+                            ship.getName().toLowerCase().contains("submarine") ? "submarine.png" :
+                                    ship.getName().toLowerCase().contains("destroyer") ? "destroyer.png" :
+                                            "plane.png";
 
             for (int[] pos : ship.getPositions()) {
                 StackPane cell = getNodeFromGridPane(opponentBoard, pos[0], pos[1]);
@@ -73,13 +72,15 @@ public class OpponentController {
         }
     }
 
-
-
+    // ---------------------------
+    // CREAR TABLERO
+    // ---------------------------
     private void createBoard() {
-        int size = Board.SIZE; // supongamos 10
+        int size = Board.SIZE;
 
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
+
                 StackPane cell = new StackPane();
                 cell.setPrefSize(40, 40);
                 cell.setStyle("-fx-border-color: white; -fx-background-color: #87CEFA;");
@@ -94,106 +95,131 @@ public class OpponentController {
         }
     }
 
+    // ---------------------------
+    // DISPARO DEL JUGADOR
+    // ---------------------------
     private void handleShot(int row, int col, StackPane cell) {
+
+        GameManager gm = GameManager.getInstance();
+
+        if (!gm.isPlayerTurn()) {
+            System.out.println("Not your turn!");
+            return;
+        }
 
         Board board = machine.getBoard();
 
-        // Validar si ya dispararon
         if (board.isShotRepeated(row, col)) {
             System.out.println("Already shot here!");
             return;
         }
 
-        // Hacer el disparo
         String result = board.receiveShot(row, col);
 
         switch (result) {
+
             case "hit":
-                ImageView hit = new ImageView(new Image(getClass().getResourceAsStream(
-                        "/edu/univalle/battleship/images/hit.png")));
-                hit.setFitWidth(40);
-                hit.setFitHeight(40);
-                cell.getChildren().add(hit);
+                addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
                 System.out.println("Hit! You can shoot again.");
                 break;
 
             case "miss":
-                ImageView miss = new ImageView(new Image(getClass().getResourceAsStream(
-                        "/edu/univalle/battleship/images/miss.png")));
-                miss.setFitWidth(40);
-                miss.setFitHeight(40);
-                cell.getChildren().add(miss);
-                System.out.println("Miss! Turn ends.");
-                // Aquí puedes agregar el turno de la máquina si quieres
+                addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+                System.out.println("Miss! Machine's turn.");
+                gm.setPlayerTurn(false);
+                machineTurn();
                 break;
 
-            default: // sunk:NombreDelBarco
+            default: // sunk:Nombre
                 if (result.startsWith("sunk:")) {
+
                     numberofsunkenships++;
-                    String numberSunkenships = Integer.toString(numberofsunkenships);
-                    planeTextFileHandler = new PlaneTextFileHandler();
                     try {
-                        planeTextFileHandler.write("player_data.csv", numberSunkenships);
+                        planeTextFileHandler.write("player_data.csv", Integer.toString(numberofsunkenships));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
                     String sunkShipName = result.split(":")[1];
+
                     Ship sunkShip = null;
                     for (Ship s : machine.getFleet()) {
-                        if (s.getName().equals(sunkShipName)) {
+                        if (s.getName().trim().equals(sunkShipName.trim())) {
                             sunkShip = s;
                             break;
                         }
                     }
 
                     if (sunkShip != null) {
-                        // Actualizar todas las posiciones del barco a sink.png
+
                         for (int[] pos : sunkShip.getPositions()) {
                             StackPane shipCell = getNodeFromGridPane(opponentBoard, pos[0], pos[1]);
                             if (shipCell != null) {
                                 shipCell.getChildren().clear();
-                                ImageView sink = new ImageView(new Image(
-                                        getClass().getResourceAsStream("/edu/univalle/battleship/images/sink.png")));
-                                sink.setFitWidth(40);
-                                sink.setFitHeight(40);
-                                shipCell.getChildren().add(sink);
+                                addImageToCell(shipCell, "/edu/univalle/battleship/images/sink.png");
                             }
                         }
                     }
+
                     System.out.println("Sunk " + sunkShipName + "! You can shoot again.");
                 }
                 break;
         }
     }
 
+    // ---------------------------
+    // TURNO DE LA MÁQUINA
+    // ---------------------------
+    private void machineTurn() {
 
-    /** Busca un StackPane en el GridPane según fila y columna */
+        MachinePlayer machine = GameManager.getInstance().getMachine();
+        Player human = GameManager.getInstance().getHuman();
+
+        String result = machine.shoot(human);
+
+        int[] last = machine.getLastShotCoordinates();
+        int row = last[0];
+        int col = last[1];
+
+        // Aquí luego dibujaremos el disparo de la máquina en TU tablero (fase siguiente)
+
+        System.out.println("Machine shot result: " + result);
+
+        if (result.equals("miss")) {
+            System.out.println("Machine missed! Player's turn again.");
+            GameManager.getInstance().setPlayerTurn(true);
+        } else {
+            System.out.println("Machine hit or sunk! Machine shoots again.");
+            machineTurn();
+        }
+    }
+
+    // ---------------------------
+    // UTILS
+    // ---------------------------
+
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
         for (var node : grid.getChildren()) {
-            if (GridPane.getRowIndex(node) == row && GridPane.getColumnIndex(node) == col) {
+            if (GridPane.getRowIndex(node) == row &&
+                    GridPane.getColumnIndex(node) == col) {
                 return (StackPane) node;
             }
         }
         return null;
     }
 
-    /** Agrega una imagen a un StackPane */
-    private void addImageToCell(StackPane cell, String imagePath) {
-        ImageView img = new ImageView(new Image(getClass().getResourceAsStream(imagePath)));
+    private void addImageToCell(StackPane cell, String imgPath) {
+        ImageView img = new ImageView(new Image(getClass().getResourceAsStream(imgPath)));
         img.setFitWidth(40);
         img.setFitHeight(40);
         cell.getChildren().add(img);
-    }
-
-    public void setNumberofsunkenships(int numberofsunkenships) {
-        this.numberofsunkenships = numberofsunkenships;
     }
 
     public int getNumberofsunkenships() {
         return numberofsunkenships;
     }
 
-
-
+    public void setNumberofsunkenships(int numberofsunkenships) {
+        this.numberofsunkenships = numberofsunkenships;
+    }
 }
