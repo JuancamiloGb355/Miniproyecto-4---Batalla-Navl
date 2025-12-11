@@ -26,7 +26,7 @@
             <VBox alignment="CENTER" prefHeight="277.0" prefWidth="548.0" spacing="35.0" BorderPane.alignment="CENTER">
                <children>
                   <Button fx:id="playButton" mnemonicParsing="false" onAction="#handlePlay" text="Jugar" />
-                  <Button mnemonicParsing="false" text="Continuar" />
+                  <Button fx:id="continueButton" mnemonicParsing="false" onAction="#handleContinue" text="Continuar" />
                </children>
             </VBox>
          </center>
