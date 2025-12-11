@@ -181,7 +181,16 @@ public class OpponentController {
         int row = last[0];
         int col = last[1];
 
-        // Aquí luego dibujaremos el disparo de la máquina en TU tablero (fase siguiente)
+        GridPane playerBoardGrid = GameManager.getInstance().getPlayerBoardGrid();
+        StackPane targetCell = getNodeFromGridPane(playerBoardGrid, row, col);
+
+        if (result.equals("miss")) {
+            addImageToCell(targetCell, "/edu/univalle/battleship/images/miss.png");
+        } else if (result.equals("hit")) {
+            addImageToCell(targetCell, "/edu/univalle/battleship/images/hit.png");
+        } else if (result.startsWith("sunk:")) {
+            addImageToCell(targetCell, "/edu/univalle/battleship/images/sink.png");
+        }
 
         System.out.println("Machine shot result: " + result);
 

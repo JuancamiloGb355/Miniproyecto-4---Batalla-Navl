@@ -29,68 +29,6 @@ public class PositionController {
     PlaneTextFileHandler planeTextFileHandler;
 
     @FXML
-    private void handleStartGame() {
-        try {
-
-            Player human = new Player();
-
-            for (Node node : playerBoard.getChildren()) {
-                if (node instanceof ImageView shipView) {
-
-                    String fileName = (String) shipView.getUserData();
-                    if (fileName == null) continue;
-
-                    int shipSize = shipSizes.get(fileName);
-
-                    int col = GridPane.getColumnIndex(shipView);
-                    int row = GridPane.getRowIndex(shipView);
-
-                    boolean horizontalPlacement = (shipView.getRotate() == -90);
-
-                    Orientation orient = horizontalPlacement
-                            ? Orientation.HORIZONTAL
-                            : Orientation.VERTICAL;
-
-                    Ship ship = new Ship(fileName, shipSize);
-                    ship.place(row, col, orient);
-
-                    human.addShip(ship);
-                    human.getBoard().placeShip(ship);
-                }
-            }
-
-            GameManager.getInstance().startNewGame(human);
-
-            System.out.println(
-                    "TEST → Barcos del jugador registrados en GameManager: "
-                            + GameManager.getInstance().getHuman().getFleet().size()
-            );
-
-            System.out.println(
-                    "TEST → Barcos de la máquina: "
-                            + GameManager.getInstance().getMachine().getFleet().size()
-            );
-
-            GameManager.getInstance().setPlayerBoardGrid(playerBoard);
-
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/edu/univalle/battleship/enemyPreviewView.fxml"));
-            Parent root = loader.load();
-
-            Stage stage = new Stage();
-            stage.setTitle("Opponent Board");
-            stage.setScene(new Scene(root));
-            stage.show();
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    @FXML
     private Button btnStartGame;
 
     private int totalShipsToPlace = 10;
@@ -148,6 +86,67 @@ public class PositionController {
 
             playerBoard.getColumnConstraints().add(col);
             playerBoard.getRowConstraints().add(row);
+        }
+    }
+
+    @FXML
+    private void handleStartGame() {
+        try {
+
+            Player human = new Player();
+
+            for (Node node : playerBoard.getChildren()) {
+                if (node instanceof ImageView shipView) {
+
+                    String fileName = (String) shipView.getUserData();
+                    if (fileName == null) continue;
+
+                    int shipSize = shipSizes.get(fileName);
+
+                    int col = GridPane.getColumnIndex(shipView);
+                    int row = GridPane.getRowIndex(shipView);
+
+                    boolean horizontalPlacement = (shipView.getRotate() == -90);
+
+                    Orientation orient = horizontalPlacement
+                            ? Orientation.HORIZONTAL
+                            : Orientation.VERTICAL;
+
+                    Ship ship = new Ship(fileName, shipSize);
+                    ship.place(row, col, orient);
+
+                    human.addShip(ship);
+                    human.getBoard().placeShip(ship);
+                }
+            }
+
+            GameManager.getInstance().startNewGame(human);
+
+            System.out.println(
+                    "TEST → Barcos del jugador registrados en GameManager: "
+                            + GameManager.getInstance().getHuman().getFleet().size()
+            );
+
+            System.out.println(
+                    "TEST → Barcos de la máquina: "
+                            + GameManager.getInstance().getMachine().getFleet().size()
+            );
+
+            GameManager.getInstance().setPlayerBoardGrid(playerBoard);
+
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/edu/univalle/battleship/enemyPreviewView.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Opponent Board");
+            stage.setScene(new Scene(root));
+            stage.show();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -228,8 +227,6 @@ public class PositionController {
 
         fleetBox.getChildren().add(view);
     }
-
-
 
      //------------------------------
      // HANDLE DROP ON GRID CELL
