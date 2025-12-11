@@ -30,7 +30,6 @@ public class GameManager {
     public void startNewGame(Player humanPlayer) {
         this.human = humanPlayer;
 
-        // Crea máquina nueva con flota aleatoria
         this.machine = new MachinePlayer();
         this.machine.placeFleetAutomatically();
 
