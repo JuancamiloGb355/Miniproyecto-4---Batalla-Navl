@@ -2,7 +2,9 @@ package edu.univalle.battleship.model;
 
 import javafx.scene.layout.GridPane;
 
-public class GameManager {
+import java.io.Serializable;
+
+public class GameManager implements Serializable {
 
     private static final GameManager INSTANCE = new GameManager();
 
