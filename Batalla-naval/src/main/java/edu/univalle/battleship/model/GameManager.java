@@ -51,4 +51,12 @@ public class GameManager {
     public void setPlayerTurn(boolean turn) {
         this.isPlayerTurn = turn;
     }
+
+    public boolean isHumanDefeated() {
+        return human.getBoard().getSunkenShips() == 10;
+    }
+
+    public boolean isMachineDefeated() {
+        return machine.getBoard().getSunkenShips() == 10;
+    }
 }
