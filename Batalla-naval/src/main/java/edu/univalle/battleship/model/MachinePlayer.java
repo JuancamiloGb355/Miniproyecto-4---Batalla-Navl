@@ -81,4 +81,14 @@ public class MachinePlayer implements Serializable {
     public String shoot(Player player) {
         return strategy.shoot(player.getBoard());
     }
+
+    public int[] getLastShotCoordinates() {
+        if (strategy instanceof edu.univalle.battleship.designpatterns.strategy.RandomShootingStrategy) {
+            return ((edu.univalle.battleship.designpatterns.strategy.RandomShootingStrategy) strategy)
+                    .getLastShotCoordinates();
+        }
+
+        return new int[]{-1, -1};
+    }
 }
+

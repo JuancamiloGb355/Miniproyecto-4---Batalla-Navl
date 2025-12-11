@@ -1,5 +1,9 @@
 package edu.univalle.battleship.controller;
 
+import edu.univalle.battleship.model.GameManager;
+import edu.univalle.battleship.model.Orientation;
+import edu.univalle.battleship.model.Player;
+import edu.univalle.battleship.model.Ship;
 import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,25 +32,57 @@ public class PositionController {
     private void handleStartGame() {
         try {
 
+            Player human = new Player();
 
-            // Cargar el FXML del tablero del enemigo
+            for (Node node : playerBoard.getChildren()) {
+                if (node instanceof ImageView shipView) {
+
+                    String fileName = (String) shipView.getUserData();
+                    if (fileName == null) continue;
+
+                    int shipSize = shipSizes.get(fileName);
+
+                    int col = GridPane.getColumnIndex(shipView);
+                    int row = GridPane.getRowIndex(shipView);
+
+                    boolean horizontalPlacement = (shipView.getRotate() == -90);
+
+                    Orientation orient = horizontalPlacement
+                            ? Orientation.HORIZONTAL
+                            : Orientation.VERTICAL;
+
+                    Ship ship = new Ship(fileName, shipSize);
+                    ship.place(row, col, orient);
+
+                    human.addShip(ship);
+                    human.getBoard().placeShip(ship);
+                }
+            }
+
+            GameManager.getInstance().startNewGame(human);
+
+            System.out.println(
+                    "TEST → Barcos del jugador registrados en GameManager: "
+                            + GameManager.getInstance().getHuman().getFleet().size()
+            );
+
+            System.out.println(
+                    "TEST → Barcos de la máquina: "
+                            + GameManager.getInstance().getMachine().getFleet().size()
+            );
+
+            GameManager.getInstance().setPlayerBoardGrid(playerBoard);
+
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
                     "/edu/univalle/battleship/enemyPreviewView.fxml"));
             Parent root = loader.load();
 
-            // Crear una nueva ventana
             Stage stage = new Stage();
             stage.setTitle("Opponent Board");
             stage.setScene(new Scene(root));
             stage.show();
-            OpponentController controller = (OpponentController) loader.getController();
-            String content = Integer.toString(controller.getNumberofsunkenships());
-            planeTextFileHandler = new PlaneTextFileHandler();
-            planeTextFileHandler.write("player_data.csv", content);
 
-
-            // Opcional: cerrar la ventana de colocación de flota
-            // ((Stage) btnStartGame.getScene().getWindow()).close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -172,10 +208,12 @@ public class PositionController {
 
         ImageView view = new ImageView(img);
 
+        view.setUserData(fileName);
+
         // REAL SIZE (matching game board)
         view.setFitWidth(40);
         view.setFitHeight(shipSize * 40);
-        view.setPreserveRatio(false); // important!
+        view.setPreserveRatio(false);
 
         // Start dragging
         view.setOnDragDetected(event -> {
@@ -239,6 +277,7 @@ public class PositionController {
         // ----------------------------------
         Image img = new Image(getClass().getResourceAsStream("/edu/univalle/battleship/images/" + shipName));
         ImageView shipView = new ImageView(img);
+        shipView.setUserData(shipName);
 
         if (horizontal) {
             shipView.setRotate(-90);
