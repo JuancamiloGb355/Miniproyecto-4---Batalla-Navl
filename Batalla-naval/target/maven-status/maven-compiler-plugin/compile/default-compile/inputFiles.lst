@@ -8,7 +8,11 @@ D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\Cell.java
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\MachinePlayer.java
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\Orientation.java
+D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\planeTextFiles\IPlaneTextFileHandler.java
+D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\planeTextFiles\PlaneTextFileHandler.java
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\Player.java
+D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\serializable\ISerializableFileHandler.java
+D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\serializable\SerializableFileHandler.java
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\Ship.java
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\model\StartModel.java
 D:\proyectos programacion\Java\Miniproyecto-4---Batalla-Naval\Batalla-naval\src\main\java\edu\univalle\battleship\view\StartStage.java
