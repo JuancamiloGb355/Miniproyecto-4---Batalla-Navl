@@ -173,14 +173,18 @@ public class OpponentController {
                     }
 
                     System.out.println("Sunk " + sunkShipName + "! You can shoot again.");
+
+                    if (GameManager.getInstance().isMachineDefeated()) {
+                        closeWindow();
+                        showEndMessage("GANASTE");
+                        return;
+                    }
                 }
                 break;
         }
     }
 
-    // ---------------------------
-    // TURNO DE LA MÁQUINA
-    // ---------------------------
+
     private void machineTurn() {
 
         MachinePlayer machine = GameManager.getInstance().getMachine();
@@ -200,7 +204,35 @@ public class OpponentController {
         } else if (result.equals("hit")) {
             addImageToCell(targetCell, "/edu/univalle/battleship/images/hit.png");
         } else if (result.startsWith("sunk:")) {
-            addImageToCell(targetCell, "/edu/univalle/battleship/images/sink.png");
+
+            String sunkShipName = result.split(":")[1].trim();
+
+            // Buscar ese barco en la flota del jugador
+            Ship sunkShip = null;
+            for (Ship s : human.getFleet()) {
+                if (s.getName().trim().equals(sunkShipName)) {
+                    sunkShip = s;
+                    break;
+                }
+            }
+
+            if (sunkShip != null) {
+
+                for (int[] pos : sunkShip.getPositions()) {
+                    StackPane cellToSink = getNodeFromGridPane(playerBoardGrid, pos[0], pos[1]);
+
+                    if (cellToSink != null) {
+                        cellToSink.getChildren().clear();
+                        addImageToCell(cellToSink, "/edu/univalle/battleship/images/sink.png");
+                    }
+                }
+            }
+        }
+
+        if (GameManager.getInstance().isHumanDefeated()) {
+            closeWindow();
+            showEndMessage("PERDISTE");
+            return;
         }
 
         System.out.println("Machine shot result: " + result);
@@ -241,5 +273,22 @@ public class OpponentController {
 
     public void setNumberofsunkenships(int numberofsunkenships) {
         this.numberofsunkenships = numberofsunkenships;
+    }
+
+    private void disableBoard() {
+        opponentBoard.setDisable(true);
+    }
+
+    private void showEndMessage(String msg) {
+        javafx.scene.control.Alert alert =
+                new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+    private void closeWindow() {
+        javafx.stage.Stage stage = (javafx.stage.Stage) opponentBoard.getScene().getWindow();
+        stage.close();
     }
 }

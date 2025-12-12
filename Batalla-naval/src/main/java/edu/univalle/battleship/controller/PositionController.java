@@ -122,6 +122,17 @@ public class PositionController {
 
             GameManager.getInstance().startNewGame(human);
 
+            System.out.println("HUMAN BOARD ships: "
+                    + GameManager.getInstance().getHuman().getBoard().getShips().size());
+            System.out.println("HUMAN FLEET ships: "
+                    + GameManager.getInstance().getHuman().getFleet().size());
+            System.out.println("MACHINE BOARD ships: "
+                    + GameManager.getInstance().getMachine().getBoard().getShips().size());
+            System.out.println("MACHINE FLEET ships: "
+                    + GameManager.getInstance().getMachine().getFleet().size());
+
+
+
             System.out.println(
                     "TEST → Barcos del jugador registrados en GameManager: "
                             + GameManager.getInstance().getHuman().getFleet().size()

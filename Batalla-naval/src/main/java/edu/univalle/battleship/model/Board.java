@@ -8,6 +8,7 @@ public class Board implements Serializable {
 
     public static int SIZE = 10;
     private final Ship[][] cells = new Ship[SIZE][SIZE];
+    private int sunkenShips = 0;
 
 
     // para guardar disparos hechos
@@ -47,6 +48,10 @@ public class Board implements Serializable {
         for (int i = 0; i < ship.getSize(); i++) {
             cells[row + i * dx][col + i * dy] = ship;
         }
+
+        if (!ships.contains(ship)) {
+            ships.add(ship);
+        }
     }
 
     public Ship[][] getCells() {
@@ -66,15 +71,16 @@ public class Board implements Serializable {
 
         Ship ship = cells[row][col];
 
-        if (ship != null) { // TOCADO
+        if (ship != null) {
             hits[row][col] = true;
             ship.hit();
 
             if (ship.isSunk()) {
-                return "sunk: " + ship.getName();
+                sunkenShips++;
+                return "sunk:" + ship.getName();
             }
             return "hit";
-        } else { // AGUA
+        } else {
             misses[row][col] = true;
             return "miss";
         }
@@ -126,5 +132,8 @@ public class Board implements Serializable {
         return hits;
     }
 
+    public int getSunkenShips() {
+        return sunkenShips;
+    }
 
 }
