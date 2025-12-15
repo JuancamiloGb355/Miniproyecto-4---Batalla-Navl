@@ -14,10 +14,11 @@ public class RandomShootingStrategy implements IShootingStrategy {
     public String shoot(Board board) {
         int row, col;
 
+        // Comprobar si la celda ya fue disparada
         do {
             row = random.nextInt(Board.SIZE);
             col = random.nextInt(Board.SIZE);
-        } while (board.isShotRepeated(row, col));
+        } while (board.getCells()[row][col] >= 2); // >=2 significa hit, sunk o miss
 
         lastRow = row;
         lastCol = col;

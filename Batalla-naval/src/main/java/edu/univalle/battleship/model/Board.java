@@ -6,33 +6,36 @@ import java.util.List;
 
 public class Board implements Serializable {
 
-    public static int SIZE = 10;
-    private final Ship[][] cells = new Ship[SIZE][SIZE];
-    private int sunkenShips = 0;
-
-
-    // para guardar disparos hechos
-    private boolean[][] hits = new boolean[SIZE][SIZE];
-    private boolean[][] misses = new boolean[SIZE][SIZE];
-
-    // lista de barcos (para hundidos y victoria)
-    private List<Ship> ships = new ArrayList<>();
-
     public enum CellStatus {
-        EMPTY, HIT, MISS, SHIP, SUNK
+        EMPTY, SHIP, HIT, SUNK, MISS
     }
 
-    public boolean canPlace(Ship ship, int row, int col, Orientation orientation) {
+    public CellStatus getCellStatus(int row, int col) {
+        return switch (cells[row][col]) {
+            case 0 -> CellStatus.EMPTY;
+            case 1 -> CellStatus.SHIP;
+            case 2 -> CellStatus.HIT;
+            case 3 -> CellStatus.SUNK;
+            case 4 -> CellStatus.MISS;
+            default -> throw new IllegalStateException("Unexpected value: " + cells[row][col]);
+        };
+    }
 
-        int dx = (orientation == Orientation.HORIZONTAL) ? 0 : 1;
-        int dy = (orientation == Orientation.HORIZONTAL) ? 1 : 0;
+
+    public static int SIZE = 10;
+    private final int[][] cells = new int[SIZE][SIZE]; // 0=agua,1=barco,2=hit,3=sunk,4=miss
+    private final List<Ship> ships = new ArrayList<>();
+
+    public boolean canPlace(Ship ship, int row, int col, Orientation orientation) {
+        int dx = orientation == Orientation.HORIZONTAL ? 0 : 1;
+        int dy = orientation == Orientation.HORIZONTAL ? 1 : 0;
 
         for (int i = 0; i < ship.getSize(); i++) {
             int r = row + i * dx;
             int c = col + i * dy;
 
             if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) return false;
-            if (cells[r][c] != null) return false;
+            if (cells[r][c] != 0) return false;
         }
         return true;
     }
@@ -42,11 +45,11 @@ public class Board implements Serializable {
         int col = ship.getColumn();
         Orientation orientation = ship.getOrientation();
 
-        int dx = (orientation == Orientation.HORIZONTAL) ? 0 : 1;
-        int dy = (orientation == Orientation.HORIZONTAL) ? 1 : 0;
+        int dx = orientation == Orientation.HORIZONTAL ? 0 : 1;
+        int dy = orientation == Orientation.HORIZONTAL ? 1 : 0;
 
         for (int i = 0; i < ship.getSize(); i++) {
-            cells[row + i * dx][col + i * dy] = ship;
+            cells[row + i * dx][col + i * dy] = 1;
         }
 
         if (!ships.contains(ship)) {
@@ -54,151 +57,88 @@ public class Board implements Serializable {
         }
     }
 
-    public Ship[][] getCells() {
+    public int[][] getCells() {
         return cells;
     }
 
-    //disparos
-    public boolean isShotRepeated(int row, int col) {
-        return hits[row][col] || misses[row][col];
+    public void setCells(int[][] newCells) {
+        for (int r = 0; r < SIZE; r++) {
+            System.arraycopy(newCells[r], 0, cells[r], 0, SIZE);
+        }
     }
 
     public String receiveShot(int row, int col) {
+        // 0 = agua, 1 = barco, 2 = hit, 3 = sunk, 4 = miss
+        if (cells[row][col] == 1) { // hay barco
+            cells[row][col] = 2; // marcar hit
 
-        if (isShotRepeated(row, col)) {
-            return "repeat";
-        }
-
-        Ship ship = cells[row][col];
-
-        if (ship != null) {
-            hits[row][col] = true;
-            ship.hit();
-
-            if (ship.isSunk()) {
-                sunkenShips++;
-                return "sunk:" + ship.getName();
+            Ship hitShip = getShipAt(row, col);
+            if (hitShip != null) {
+                hitShip.hit(); // registrar hit
+                if (hitShip.isSunk()) {
+                    for (int[] pos : hitShip.getPositions()) {
+                        cells[pos[0]][pos[1]] = 3; // todas las celdas como sunk
+                    }
+                    return "sunk:" + hitShip.getName();
+                }
             }
             return "hit";
-        } else {
-            misses[row][col] = true;
+        } else if (cells[row][col] == 0) {
+            cells[row][col] = 4; // miss
             return "miss";
+        } else {
+            // ya fue disparado
+            return "already";
         }
     }
 
-    //victoria
+
+
+    public Ship getShipAt(int row, int col) {
+        for (Ship ship : ships) {
+            int[][] pos = ship.getPositions();
+            for (int[] p : pos) {
+                if (p[0] == row && p[1] == col) return ship;
+            }
+        }
+        return null;
+    }
+
     public boolean allShipsSunk() {
-        for (Ship s : ships) {
-            if (!s.isSunk()) return false;
+        for (Ship ship : ships) {
+            if (!ship.isSunk()) return false;
         }
         return true;
     }
 
-    //acceso a barcos
-    public List<Ship> getShips() {
-        return ships;
-    }
-
-    /**
-     * Devuelve el barco que se encuentra en la celda indicada,
-     * o null si no hay ninguno.
-     */
-    public Ship getShipAt(int row, int col) {
-        if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) return null;
-        return cells[row][col];
-    }
-
-    /**
-     * Devuelve el estado de la celda indicada.
-     */
-    public CellStatus getCellStatus(int row, int col) {
-        if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) return null;
-
-        if (hits[row][col]) return CellStatus.HIT;
-        if (misses[row][col]) return CellStatus.MISS;
-
-        Ship ship = cells[row][col];
-        if (ship != null && ship.isSunk()) return CellStatus.SUNK;
-        if (ship != null) return CellStatus.SHIP;
-
-        return CellStatus.EMPTY;
-    }
-
-    public boolean[][] getMisses() {
-        return misses;
-    }
-
-    public boolean[][] getHits() {
-        return hits;
-    }
-
-    public int getSunkenShips() {
-        return sunkenShips;
-    }
-
-    /**
-     * Devuelve un array booleano de disparos realizados:
-     * true = celda ya fue disparada (hit o miss)
-     */
-    public boolean[][] getShots() {
-        boolean[][] shots = new boolean[SIZE][SIZE];
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                shots[r][c] = hits[r][c] || misses[r][c];
-            }
-        }
-        return shots;
-    }
-
-    /**
-     * Restaura los disparos a partir de un array booleano
-     */
-    public void setShots(boolean[][] shots) {
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                if (shots[r][c]) {
-                    // Asumimos que un disparo previo no hundió un barco todavía
-                    // Si quieres más precisión, necesitarías guardar hits y misses por separado
-                    hits[r][c] = cells[r][c] != null;
-                    misses[r][c] = cells[r][c] == null;
-                } else {
-                    hits[r][c] = false;
-                    misses[r][c] = false;
-                }
-            }
-        }
-    }
-
     public void clear() {
-        // Reinicia los disparos
-        hits = new boolean[SIZE][SIZE];
-        misses = new boolean[SIZE][SIZE];
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                cells[r][c] = 0;
+            }
+        }
+        ships.clear();
+    }
 
-        // Reinicia el tablero de barcos (asumiendo que Board tiene lista de barcos)
+    // Métodos de utilidad para el UI
+    public boolean isShotRepeated(int row, int col) {
+        int value = cells[row][col];
+        return value == 2 || value == 3 || value == 4;
+    }
+
+    public void rebuildShipsHitsFromCells() {
         for (Ship ship : ships) {
-            // Si Board guarda un arreglo interno con la posición de los barcos, restablecerlo
-            // Si no, simplemente vacía la lista de barcos y se volverán a colocar con placeShip
-            // ships.clear(); // OJO: solo si vas a volver a colocar
-        }
-
-        sunkenShips = 0;
-    }
-
-    // Para reconstruir los disparos del jugador o la máquina
-    public void setHits(boolean[][] hits) {
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                this.hits[r][c] = hits[r][c];
+            int hitsCount = 0;
+            for (int[] pos : ship.getPositions()) {
+                int r = pos[0];
+                int c = pos[1];
+                if (cells[r][c] == 2 || cells[r][c] == 3) hitsCount++;
+            }
+            for (int i = 0; i < hitsCount; i++) {
+                ship.hit(); // registra los golpes previos
             }
         }
     }
 
-    public void setMisses(boolean[][] misses) {
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                this.misses[r][c] = misses[r][c];
-            }
-        }
-    }
 
 }

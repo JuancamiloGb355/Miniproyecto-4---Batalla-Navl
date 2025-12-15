@@ -10,21 +10,17 @@ class BoardTest {
 
     @Test
     void assertsRepeatedShotCorrectly() {
-
         Board board = new Board();
-        boolean[][] misses = board.getMisses();
-        misses[3][4] = true;
-        assertTrue(board.isShotRepeated(3,4));
-
+        board.getCells()[3][4] = 4; // marcar como miss
+        assertTrue(board.isShotRepeated(3, 4));
     }
 
     @Test
     void assertsNonRepeatedShotCorrectly() {
         Board board = new Board();
-        boolean[][] misses = board.getMisses();
-        assertFalse(board.isShotRepeated(0,0));
-
+        assertFalse(board.isShotRepeated(0, 0));
     }
+
 
     @Test
     void checksShipPlacementCorrectly() {

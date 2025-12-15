@@ -24,21 +24,18 @@ public class OpponentController {
     @FXML
     BorderPane root;
 
-    // Referencia al botón en el FXML
     @FXML
     private Button btnSaveExit;
 
     private MachinePlayer machine;
     private Player human;
 
-    private int numberofsunkenships = 0;
+    private int numberOfSunkenShips = 0;
 
     private PlaneTextFileHandler planeTextFileHandler;
 
     @FXML
     public void initialize() {
-
-        // ⬅️ Obtener jugadores desde GameManager
         GameManager gm = GameManager.getInstance();
         this.human = gm.getHuman();
         this.machine = gm.getMachine();
@@ -47,7 +44,6 @@ public class OpponentController {
 
         createBoard();
 
-        // Tecla para mostrar barcos (debug)
         opponentBoard.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene != null) {
                 newScene.setOnKeyPressed(event -> {
@@ -57,174 +53,108 @@ public class OpponentController {
                 });
             }
         });
-
-
     }
 
-    // ---------------------------
-    // DIBUJAR BARCOS (debug)
-    // ---------------------------
     private void revealShips() {
         for (Ship ship : machine.getFleet()) {
-            // Elegir la imagen según el nombre real del barco
             String imgName =
                     ship.getName().toLowerCase().contains("carrier") ? "carrier.png" :
                             ship.getName().toLowerCase().contains("submarine") ? "submarine.png" :
                                     ship.getName().toLowerCase().contains("destroyer") ? "destroyer.png" :
                                             "plane.png";
 
-            // Tomar la primera posición del barco para ubicar la imagen
             int[][] positions = ship.getPositions();
             int startRow = positions[0][0];
             int startCol = positions[0][1];
             boolean horizontal = positions.length > 1 && positions[0][0] == positions[1][0];
             int shipSize = positions.length;
 
-            Image img = new Image(getClass().getResourceAsStream(
-                    "/edu/univalle/battleship/images/" + imgName));
+            Image img = new Image(getClass().getResourceAsStream("/edu/univalle/battleship/images/" + imgName));
             ImageView shipView = new ImageView(img);
-
             shipView.setMouseTransparent(true);
 
-            // Ajustar tamaño y rotación según orientación
             if (horizontal) {
                 shipView.setRotate(-90);
                 shipView.setFitWidth(40);
                 shipView.setFitHeight(40 * shipSize);
                 double offset = (shipSize - 1) * 20.0;
                 shipView.setTranslateX(offset);
-                shipView.setTranslateY(0);
             } else {
                 shipView.setFitWidth(40);
                 shipView.setFitHeight(40 * shipSize);
             }
 
-            // Colocar en GridPane
             GridPane.setRowIndex(shipView, startRow);
             GridPane.setColumnIndex(shipView, startCol);
-            if (horizontal) {
-                GridPane.setColumnSpan(shipView, shipSize);
-            } else {
-                GridPane.setRowSpan(shipView, shipSize);
-            }
+            if (horizontal) GridPane.setColumnSpan(shipView, shipSize);
+            else GridPane.setRowSpan(shipView, shipSize);
 
             opponentBoard.getChildren().add(shipView);
         }
     }
 
-
-
-    // ---------------------------
-    // CREAR TABLERO
-    // ---------------------------
     private void createBoard() {
         int size = Board.SIZE;
 
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
-
                 StackPane cell = new StackPane();
                 cell.setPrefSize(40, 40);
                 cell.setStyle("-fx-border-color: white; -fx-background-color: #87CEFA;");
-
                 final int r = row;
                 final int c = col;
-
                 cell.setOnMouseClicked(event -> handleShot(r, c, cell));
-
                 opponentBoard.add(cell, col, row);
             }
         }
     }
 
-    // ---------------------------
-    // DISPARO DEL JUGADOR
-    // ---------------------------
     private void handleShot(int row, int col, StackPane cell) {
-
         GameManager gm = GameManager.getInstance();
 
-        if (!gm.isPlayerTurn()) {
-            System.out.println("Not your turn!");
-            return;
-        }
+        if (!gm.isPlayerTurn()) return;
 
         Board board = machine.getBoard();
+        int[][] cells = board.getCells();
 
-        if (board.isShotRepeated(row, col)) {
-            System.out.println("Already shot here!");
-            return;
-        }
+        if (cells[row][col] >= 2) return; // ya fue disparado
 
-        String result = board.receiveShot(row, col);
+        String result = board.receiveShot(row, col); // recibe hit/miss/sunk y actualiza array
 
         switch (result) {
-
             case "hit":
+                cells[row][col] = 2;
                 addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
-                System.out.println("Hit! You can shoot again.");
                 break;
-
             case "miss":
+                cells[row][col] = 4;
                 addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
-                System.out.println("Miss! Machine's turn.");
                 gm.setPlayerTurn(false);
                 machineTurn();
                 break;
-
-            default: // sunk:Nombre
+            default:
                 if (result.startsWith("sunk:")) {
+                    numberOfSunkenShips++;
+                    String sunkName = result.split(":")[1].trim();
 
-                    numberofsunkenships++;
-                    if (numberofsunkenships >= 10){
-                        System.out.println("¡Has ganado el juego!");
-                        Stage stage = (Stage) root.getScene().getWindow();
-                        stage.close();
-
-                    }
-                    try {
-                        planeTextFileHandler.write("player_data.csv", Integer.toString(numberofsunkenships));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    String sunkShipName = result.split(":")[1];
-
-                    Ship sunkShip = null;
-                    for (Ship s : machine.getFleet()) {
-                        if (s.getName().trim().equals(sunkShipName.trim())) {
-                            sunkShip = s;
-                            break;
-                        }
-                    }
+                    Ship sunkShip = machine.getFleet().stream()
+                            .filter(s -> s.getName().trim().equals(sunkName))
+                            .findFirst().orElse(null);
 
                     if (sunkShip != null) {
-
                         for (int[] pos : sunkShip.getPositions()) {
                             StackPane shipCell = getNodeFromGridPane(opponentBoard, pos[0], pos[1]);
                             if (shipCell != null) {
+                                cells[pos[0]][pos[1]] = 3;
                                 shipCell.getChildren().clear();
                                 addImageToCell(shipCell, "/edu/univalle/battleship/images/sink.png");
                             }
                         }
                     }
 
-                    System.out.println("Sunk " + sunkShipName + "! You can shoot again.");
-
-                    if (GameManager.getInstance().isMachineDefeated()) {
-                        PositionController pc =
-                                GameManager.getInstance().getPositionController();
-
-                        if (pc != null) {
-                            Platform.runLater(() -> {
-                                pc.clearShotsOnly();
-                                pc.btnStartGame.setDisable(false);
-                                pc.btnStartGame.setText("Try again");
-                            });
-                        }
-
+                    if (numberOfSunkenShips >= 10) {
                         closeWindow();
-                        endGame("GANASTE 🎉");
+                        endGame("¡HAS GANADO!");
                         return;
                     }
                 }
@@ -232,44 +162,31 @@ public class OpponentController {
         }
     }
 
-
     private void machineTurn() {
-
         MachinePlayer machine = GameManager.getInstance().getMachine();
         Player human = GameManager.getInstance().getHuman();
 
         String result = machine.shoot(human);
-
         int[] last = machine.getLastShotCoordinates();
         int row = last[0];
         int col = last[1];
 
-        GridPane playerBoardGrid = GameManager.getInstance().getPlayerBoardGrid();
-        StackPane targetCell = getNodeFromGridPane(playerBoardGrid, row, col);
+        GridPane playerBoard = GameManager.getInstance().getPlayerBoardGrid();
+        StackPane targetCell = getNodeFromGridPane(playerBoard, row, col);
+        int[][] cells = human.getBoard().getCells();
 
-        if (result.equals("miss")) {
-            addImageToCell(targetCell, "/edu/univalle/battleship/images/miss.png");
-        } else if (result.equals("hit")) {
-            addImageToCell(targetCell, "/edu/univalle/battleship/images/hit.png");
-        } else if (result.startsWith("sunk:")) {
-
-            String sunkShipName = result.split(":")[1].trim();
-
-            // Buscar ese barco en la flota del jugador
-            Ship sunkShip = null;
-            for (Ship s : human.getFleet()) {
-                if (s.getName().trim().equals(sunkShipName)) {
-                    sunkShip = s;
-                    break;
-                }
-            }
-
+        if (result.equals("miss")) cells[row][col] = 4;
+        else if (result.equals("hit")) cells[row][col] = 2;
+        else if (result.startsWith("sunk:")) {
+            String sunkName = result.split(":")[1].trim();
+            Ship sunkShip = human.getFleet().stream()
+                    .filter(s -> s.getName().trim().equals(sunkName))
+                    .findFirst().orElse(null);
             if (sunkShip != null) {
-
                 for (int[] pos : sunkShip.getPositions()) {
-                    StackPane cellToSink = getNodeFromGridPane(playerBoardGrid, pos[0], pos[1]);
-
+                    StackPane cellToSink = getNodeFromGridPane(playerBoard, pos[0], pos[1]);
                     if (cellToSink != null) {
+                        cells[pos[0]][pos[1]] = 3;
                         cellToSink.getChildren().clear();
                         addImageToCell(cellToSink, "/edu/univalle/battleship/images/sink.png");
                     }
@@ -277,123 +194,68 @@ public class OpponentController {
             }
         }
 
+        // Mostrar la imagen
+        if (targetCell != null) {
+            if (cells[row][col] == 2) addImageToCell(targetCell, "/edu/univalle/battleship/images/hit.png");
+            else if (cells[row][col] == 3) addImageToCell(targetCell, "/edu/univalle/battleship/images/sink.png");
+            else if (cells[row][col] == 4) addImageToCell(targetCell, "/edu/univalle/battleship/images/miss.png");
+        }
+
         if (GameManager.getInstance().isHumanDefeated()) {
-            PositionController pc =
-                    GameManager.getInstance().getPositionController();
-
-            if (pc != null) {
-                Platform.runLater(() -> {
-                    pc.clearShotsOnly();
-                    pc.btnStartGame.setDisable(false);
-                    pc.btnStartGame.setText("Try again");
-                });
-            }
-
             closeWindow();
-            endGame("PERDISTE 💀");
+            endGame("¡HAS PERDIDO!");
             return;
         }
 
-        System.out.println("Machine shot result: " + result);
-
-        if (result.equals("miss")) {
-            System.out.println("Machine missed! Player's turn again.");
-            GameManager.getInstance().setPlayerTurn(true);
-        } else {
-            System.out.println("Machine hit or sunk! Machine shoots again.");
-            machineTurn();
-        }
+        if (result.equals("miss")) GameManager.getInstance().setPlayerTurn(true);
+        else machineTurn();
     }
 
-    // ---------------------------
-    // UTILS
-    // ---------------------------
-
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
-        for (var node : grid.getChildren()) {
-            if (GridPane.getRowIndex(node) == row &&
-                    GridPane.getColumnIndex(node) == col) {
-                return (StackPane) node;
-            }
+        for (Node node : grid.getChildren()) {
+            Integer r = GridPane.getRowIndex(node);
+            Integer c = GridPane.getColumnIndex(node);
+            if (r == null) r = 0;
+            if (c == null) c = 0;
+            if (r == row && c == col && node instanceof StackPane cell) return cell;
         }
         return null;
     }
 
-    private void addImageToCell(StackPane cell, String imgPath) {
-        ImageView img = new ImageView(new Image(getClass().getResourceAsStream(imgPath)));
+    private void addImageToCell(StackPane cell, String path) {
+        ImageView img = new ImageView(new Image(getClass().getResourceAsStream(path)));
         img.setFitWidth(40);
         img.setFitHeight(40);
         cell.getChildren().add(img);
     }
 
-    public int getNumberofsunkenships() {
-        return numberofsunkenships;
-    }
-
-    public void setNumberofsunkenships(int numberofsunkenships) {
-        this.numberofsunkenships = numberofsunkenships;
-    }
-
-    private void disableBoard() {
-        opponentBoard.setDisable(true);
-    }
-
-    private void showEndMessage(String msg) {
-        javafx.scene.control.Alert alert =
-                new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
     private void closeWindow() {
-        javafx.stage.Stage stage = (javafx.stage.Stage) opponentBoard.getScene().getWindow();
+        Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
 
     private void endGame(String message) {
+        javafx.scene.control.Alert alert =
+                new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
 
-        // Mostrar mensaje
-        showEndMessage(message);
-
-        // Cerrar ventana del oponente
-        Stage stage = (Stage) root.getScene().getWindow();
-        stage.close();
-
-        // Reset GameManager
         GameManager.getInstance().resetGame();
-
-        // Obtener PositionController y resetear tablero
-        PositionController pc =
-                (PositionController) GameManager.getInstance()
-                        .getPlayerBoardGrid()
-                        .getScene()
-                        .getUserData();
-
     }
 
     @FXML
     private void handleSaveExit() {
-        if (human != null && machine != null) {
-            GameStateHandler.saveGame(human, machine); // guardar partida
-        }
-
-        // Cerrar la ventana
+        if (human != null && machine != null) GameStateHandler.saveGame(human, machine);
         Stage stage = (Stage) btnSaveExit.getScene().getWindow();
         stage.close();
     }
 
-    // Permite pasar los jugadores al controlador desde otra clase
-    public void setPlayers(Player human, MachinePlayer machine) {
-        this.human = human;
-        this.machine = machine;
-    }
-
     public void rebuildOpponentBoard() {
-        opponentBoard.getChildren().clear(); // limpiar
+        opponentBoard.getChildren().clear();
         int size = Board.SIZE;
+        int[][] boardArray = machine.getBoard().getCells();
 
-        // Crear celdas vacías
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
                 StackPane cell = new StackPane();
@@ -403,20 +265,19 @@ public class OpponentController {
                 final int c = col;
                 cell.setOnMouseClicked(event -> handleShot(r, c, cell));
                 opponentBoard.add(cell, col, row);
-            }
-        }
 
-        // Colocar disparos hechos
-        boolean[][] hits = machine.getBoard().getHits();
-        boolean[][] misses = machine.getBoard().getMisses();
-        for (int row = 0; row < size; row++) {
-            for (int col = 0; col < size; col++) {
-                StackPane cell = getNodeFromGridPane(opponentBoard, row, col);
-                if (cell != null) {
-                    if (hits[row][col]) addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
-                    if (misses[row][col]) addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+                switch (boardArray[row][col]) {
+                    case 2 -> addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
+                    case 3 -> addImageToCell(cell, "/edu/univalle/battleship/images/sink.png");
+                    case 4 -> addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
                 }
             }
         }
     }
+
+    public void setPlayers(Player human, MachinePlayer machine) {
+        this.human = human;
+        this.machine = machine;
+    }
+
 }

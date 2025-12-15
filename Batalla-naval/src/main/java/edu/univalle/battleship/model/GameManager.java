@@ -3,6 +3,7 @@ package edu.univalle.battleship.model;
 import edu.univalle.battleship.controller.PositionController;
 import javafx.scene.layout.GridPane;
 import java.io.Serializable;
+import java.util.List;
 
 public class GameManager implements Serializable {
 
@@ -79,11 +80,37 @@ public class GameManager implements Serializable {
     }
 
     public boolean isHumanDefeated() {
-        return human != null && human.getBoard().getSunkenShips() == 10;
+        if (human == null) return false;
+        int[][] board = human.getBoard().getCells();
+
+        // Contar barcos completos hundidos (opcional: aquí simplificamos contando hits tipo "sunk")
+        int sunkShips = countSunkShips(board, human.getFleet());
+        return sunkShips >= 10;
     }
 
     public boolean isMachineDefeated() {
-        return machine != null && machine.getBoard().getSunkenShips() == 10;
+        if (machine == null) return false;
+        int[][] board = machine.getBoard().getCells();
+        int sunkShips = countSunkShips(board, machine.getFleet());
+        return sunkShips >= 10;
     }
 
+    // Método auxiliar para contar barcos hundidos
+    private int countSunkShips(int[][] board, List<Ship> fleet) {
+        int count = 0;
+        for (Ship ship : fleet) {
+            boolean sunk = true;
+            int[][] positions = ship.getPositions();
+            for (int[] pos : positions) {
+                int r = pos[0];
+                int c = pos[1];
+                if (board[r][c] != 3) { // 3 = sunk
+                    sunk = false;
+                    break;
+                }
+            }
+            if (sunk) count++;
+        }
+        return count;
+    }
 }
