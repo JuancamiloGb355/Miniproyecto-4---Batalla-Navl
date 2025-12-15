@@ -136,4 +136,69 @@ public class Board implements Serializable {
         return sunkenShips;
     }
 
+    /**
+     * Devuelve un array booleano de disparos realizados:
+     * true = celda ya fue disparada (hit o miss)
+     */
+    public boolean[][] getShots() {
+        boolean[][] shots = new boolean[SIZE][SIZE];
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                shots[r][c] = hits[r][c] || misses[r][c];
+            }
+        }
+        return shots;
+    }
+
+    /**
+     * Restaura los disparos a partir de un array booleano
+     */
+    public void setShots(boolean[][] shots) {
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                if (shots[r][c]) {
+                    // Asumimos que un disparo previo no hundió un barco todavía
+                    // Si quieres más precisión, necesitarías guardar hits y misses por separado
+                    hits[r][c] = cells[r][c] != null;
+                    misses[r][c] = cells[r][c] == null;
+                } else {
+                    hits[r][c] = false;
+                    misses[r][c] = false;
+                }
+            }
+        }
+    }
+
+    public void clear() {
+        // Reinicia los disparos
+        hits = new boolean[SIZE][SIZE];
+        misses = new boolean[SIZE][SIZE];
+
+        // Reinicia el tablero de barcos (asumiendo que Board tiene lista de barcos)
+        for (Ship ship : ships) {
+            // Si Board guarda un arreglo interno con la posición de los barcos, restablecerlo
+            // Si no, simplemente vacía la lista de barcos y se volverán a colocar con placeShip
+            // ships.clear(); // OJO: solo si vas a volver a colocar
+        }
+
+        sunkenShips = 0;
+    }
+
+    // Para reconstruir los disparos del jugador o la máquina
+    public void setHits(boolean[][] hits) {
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                this.hits[r][c] = hits[r][c];
+            }
+        }
+    }
+
+    public void setMisses(boolean[][] misses) {
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+                this.misses[r][c] = misses[r][c];
+            }
+        }
+    }
+
 }

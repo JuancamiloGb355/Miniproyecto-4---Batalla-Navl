@@ -4,6 +4,8 @@ import edu.univalle.battleship.model.*;
 import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -21,6 +23,10 @@ public class OpponentController {
 
     @FXML
     BorderPane root;
+
+    // Referencia al botón en el FXML
+    @FXML
+    private Button btnSaveExit;
 
     private MachinePlayer machine;
     private Player human;
@@ -366,4 +372,51 @@ public class OpponentController {
 
     }
 
+    @FXML
+    private void handleSaveExit() {
+        if (human != null && machine != null) {
+            GameStateHandler.saveGame(human, machine); // guardar partida
+        }
+
+        // Cerrar la ventana
+        Stage stage = (Stage) btnSaveExit.getScene().getWindow();
+        stage.close();
+    }
+
+    // Permite pasar los jugadores al controlador desde otra clase
+    public void setPlayers(Player human, MachinePlayer machine) {
+        this.human = human;
+        this.machine = machine;
+    }
+
+    public void rebuildOpponentBoard() {
+        opponentBoard.getChildren().clear(); // limpiar
+        int size = Board.SIZE;
+
+        // Crear celdas vacías
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                StackPane cell = new StackPane();
+                cell.setPrefSize(40, 40);
+                cell.setStyle("-fx-border-color: white; -fx-background-color: #87CEFA;");
+                final int r = row;
+                final int c = col;
+                cell.setOnMouseClicked(event -> handleShot(r, c, cell));
+                opponentBoard.add(cell, col, row);
+            }
+        }
+
+        // Colocar disparos hechos
+        boolean[][] hits = machine.getBoard().getHits();
+        boolean[][] misses = machine.getBoard().getMisses();
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                StackPane cell = getNodeFromGridPane(opponentBoard, row, col);
+                if (cell != null) {
+                    if (hits[row][col]) addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
+                    if (misses[row][col]) addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+                }
+            }
+        }
+    }
 }

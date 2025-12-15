@@ -1,9 +1,6 @@
 package edu.univalle.battleship.controller;
 
-import edu.univalle.battleship.model.GameManager;
-import edu.univalle.battleship.model.Orientation;
-import edu.univalle.battleship.model.Player;
-import edu.univalle.battleship.model.Ship;
+import edu.univalle.battleship.model.*;
 import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -35,6 +32,145 @@ public class PositionController {
     private int totalShipsToPlace = 10;
     private int shipsPlaced = 0;
 
+    private Player player;
+
+    public GridPane getPlayerBoard() {
+        return playerBoard;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public void rebuildPlayerBoard() {
+        if (player == null) return;
+
+        // Limpiar tablero visual pero mantener celdas
+        for (Node node : playerBoard.getChildren()) {
+            if (node instanceof StackPane cell) {
+                cell.getChildren().removeIf(child -> child instanceof ImageView);
+            }
+        }
+
+        // Dibujar barcos
+        for (Ship ship : player.getFleet()) {
+            int[][] positions = ship.getPositions();
+            int shipSize = positions.length;
+            boolean horizontal = positions.length > 1 && positions[0][0] == positions[1][0];
+
+            String name = ship.getName().toLowerCase();
+            String imgName;
+
+            if (name.contains("carrier")) {
+                imgName = "carrier.png";
+            } else if (name.contains("submarine")) {
+                imgName = "submarine.png";
+            } else if (name.contains("destroyer")) {
+                imgName = "destroyer.png";
+            } else {
+                imgName = "plane.png"; // patrol
+            }
+
+
+            Image img = new Image(getClass().getResourceAsStream("/edu/univalle/battleship/images/" + imgName));
+            ImageView shipView = new ImageView(img);
+            shipView.setUserData(imgName);
+            shipView.setMouseTransparent(true);
+
+            if (horizontal) {
+                shipView.setRotate(-90);
+                shipView.setFitWidth(40);
+                shipView.setFitHeight(40 * shipSize);
+                double offset = (shipSize - 1) * 20.0;
+                shipView.setTranslateX(offset);
+            } else {
+                shipView.setFitWidth(40);
+                shipView.setFitHeight(40 * shipSize);
+            }
+
+            // Ubicar en la primera celda
+            StackPane cell = getNodeFromGridPane(playerBoard, positions[0][0], positions[0][1]);
+            if (cell != null) {
+                GridPane.setRowIndex(shipView, positions[0][0]);
+                GridPane.setColumnIndex(shipView, positions[0][1]);
+                if (horizontal) GridPane.setColumnSpan(shipView, shipSize);
+                else GridPane.setRowSpan(shipView, shipSize);
+                playerBoard.getChildren().add(shipView);
+            }
+        }
+
+        // Dibujar disparos previos (hits y misses)
+        boolean[][] hits = player.getBoard().getHits();
+        boolean[][] misses = player.getBoard().getMisses();
+        for (int r = 0; r < Board.SIZE; r++) {
+            for (int c = 0; c < Board.SIZE; c++) {
+                StackPane cell = getNodeFromGridPane(playerBoard, r, c);
+                if (cell == null) continue;
+                if (hits[r][c]) addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
+                else if (misses[r][c]) addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+            }
+        }
+    }
+
+    private void addImageToCell(StackPane cell, String imgPath) {
+        if (cell == null) return;
+
+        Image img = new Image(getClass().getResourceAsStream(imgPath));
+        ImageView imgView = new ImageView(img);
+        imgView.setFitWidth(40);
+        imgView.setFitHeight(40);
+        cell.getChildren().add(imgView);
+    }
+
+
+    private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
+        for (Node node : grid.getChildren()) {
+            Integer rowIndex = GridPane.getRowIndex(node);
+            Integer colIndex = GridPane.getColumnIndex(node);
+            if (rowIndex == null) rowIndex = 0;
+            if (colIndex == null) colIndex = 0;
+
+            if (rowIndex == row && colIndex == col && node instanceof StackPane cell) {
+                return cell;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Actualiza la celda visual como golpe acertado (hit)
+     */
+    public void updateCellAsHit(int row, int col) {
+        // Obtener la celda del GridPane (suponiendo que cada celda es un Button o Pane)
+        javafx.scene.Node node = getNodeFromGrid(playerBoard, row, col);
+        if (node != null) {
+            node.setStyle("-fx-background-color: red; -fx-border-color: black;");
+        }
+    }
+
+    /**
+     * Actualiza la celda visual como disparo fallido (miss)
+     */
+    public void updateCellAsMiss(int row, int col) {
+        javafx.scene.Node node = getNodeFromGrid(playerBoard, row, col);
+        if (node != null) {
+            node.setStyle("-fx-background-color: lightblue; -fx-border-color: black;");
+        }
+    }
+
+    /**
+     * Método auxiliar para obtener el nodo (celda) en el GridPane
+     */
+    private javafx.scene.Node getNodeFromGrid(GridPane grid, int row, int col) {
+        for (javafx.scene.Node node : grid.getChildren()) {
+            Integer r = GridPane.getRowIndex(node);
+            Integer c = GridPane.getColumnIndex(node);
+            if (r != null && c != null && r == row && c == col) {
+                return node;
+            }
+        }
+        return null;
+    }
 
     private boolean horizontal = false;
     private final int[][] board = new int[10][10]; // 0 = empty, 1 = occupied

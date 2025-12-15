@@ -22,7 +22,7 @@
             <children>
                 <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Opponent Board – Fire!" textFill="#0d3242" />
 
-                <Button fx:id="btnSaveExit" style="-fx-background-color: #fce677; -fx-border-color: #f5be33; -fx-font-size: 12px;" text="Guardar y salir" textFill="#d06800" />
+                <Button fx:id="btnSaveExit" onAction="#handleSaveExit" style="-fx-background-color: #fce677; -fx-border-color: #f5be33; -fx-font-size: 12px;" text="Guardar y salir" textFill="#d06800" />
             </children>
         </HBox>
     </top>

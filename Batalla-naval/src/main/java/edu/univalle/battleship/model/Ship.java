@@ -38,6 +38,17 @@ public class Ship implements Serializable {
         return orientation;
     }
 
+    // Devuelve la cantidad de golpes recibidos
+    public int getHits() {
+        return hits;
+    }
+
+    // Opcional: reiniciar golpes
+    public void resetHits() {
+        hits = 0;
+    }
+
+
     public void place(int row, int column, Orientation orientation) {
         this.row = row;
         this.column = column;
