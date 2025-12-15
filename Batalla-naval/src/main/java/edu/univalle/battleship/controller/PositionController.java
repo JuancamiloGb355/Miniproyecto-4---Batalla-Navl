@@ -202,6 +202,7 @@ public class PositionController {
 
                 cell.getChildren().add(rect);
 
+
                 // Accept drops
                 cell.setOnDragOver(event -> {
                     if (event.getGestureSource() != cell && event.getDragboard().hasString()) {
