@@ -2,6 +2,8 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.Glow?>
+<?import javafx.scene.effect.Reflection?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -10,20 +12,23 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #82D1F5;" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.univalle.battleship.controller.StartController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #bdeaff;" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.univalle.battleship.controller.StartController">
     <children>
-        <BorderPane prefHeight="400.0" prefWidth="600.0">
+        <BorderPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-image: &quot;C:\Users\USER\Desktop\Miniproyecto-4---Batalla-Navl\Batalla-naval\src\main\resources\edu\univalle\battleship\images\fondo.png&quot;;">
             <top>
                 <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <children>
-                        <ImageView fitHeight="123.0" fitWidth="129.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fitHeight="123.0" fitWidth="93.0" pickOnBounds="true" preserveRatio="true">
                             <image>
                                 <Image url="@images/sun.png" />
                             </image>
+                     <effect>
+                        <Glow level="0.5" />
+                     </effect>
                         </ImageView>
-                        <Label alignment="CENTER" prefHeight="121.0" prefWidth="350.0" text="Batalla Naval">
+                        <Label alignment="CENTER" prefHeight="121.0" prefWidth="485.0" text="Batalla Naval" textFill="#0d3242">
                             <font>
-                                <Font name="Bookman Old Style" size="48.0" />
+                                <Font name="Bookman Old Style" size="62.0" />
                             </font>
                         </Label>
                     </children>
@@ -32,8 +37,14 @@
             <center>
                 <VBox alignment="CENTER" prefHeight="277.0" prefWidth="548.0" spacing="35.0" BorderPane.alignment="CENTER">
                     <children>
-                        <Button fx:id="playButton" mnemonicParsing="false" onAction="#handlePlay" text="Jugar" />
-                        <Button fx:id="continueButton" mnemonicParsing="false" onAction="#handleContinue" text="Continuar" />
+                        <Button fx:id="playButton" mnemonicParsing="false" onAction="#handlePlay" style="-fx-background-color: #fccfc0; -fx-border-color: #f7a083; -fx-border-width: 2px; -fx-border-style: dashed;" text="Jugar" textFill="#cd2a02">
+                     <font>
+                        <Font name="Bookman Old Style" size="20.0" />
+                     </font></Button>
+                        <Button fx:id="continueButton" mnemonicParsing="false" onAction="#handleContinue" style="-fx-background-color: #fce677; -fx-border-color: #f5be33; -fx-border-style: dashed; -fx-border-width: 2px;" text="Continuar" textFill="#d06800">
+                     <font>
+                        <Font name="Book Antiqua" size="20.0" />
+                     </font></Button>
                     </children>
                 </VBox>
             </center>
@@ -44,6 +55,9 @@
                             <image>
                                 <Image url="@images/boat.png" />
                             </image>
+                     <effect>
+                        <Reflection bottomOpacity="0.04" fraction="0.66" topOpacity="0.49" />
+                     </effect>
                         </ImageView>
                     </children>
                 </HBox>
@@ -55,6 +69,9 @@
                             <image>
                                 <Image url="@images/boat.png" />
                             </image>
+                     <effect>
+                        <Reflection bottomOpacity="0.4" fraction="0.66" topOpacity="0.49" />
+                     </effect>
                         </ImageView>
                     </children>
                 </HBox>
