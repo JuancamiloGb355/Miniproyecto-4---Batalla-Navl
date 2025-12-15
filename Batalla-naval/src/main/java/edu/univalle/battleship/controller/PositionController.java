@@ -185,9 +185,9 @@ public class PositionController {
     }
 
 
-     //------------------------------
-     //CREATE GRID BOARD
-     //------------------------------
+    //------------------------------
+    //CREATE GRID BOARD
+    //------------------------------
     private void renderBoard() {
         int size = 10;
         int cellSize = 40;
@@ -265,9 +265,9 @@ public class PositionController {
         fleetBox.getChildren().add(view);
     }
 
-     //------------------------------
-     // HANDLE DROP ON GRID CELL
-     //------------------------------
+    //------------------------------
+    // HANDLE DROP ON GRID CELL
+    //------------------------------
     private void handleDrop(DragEvent event, StackPane cell) {
         Dragboard db = event.getDragboard();
         if (!db.hasString()) return;

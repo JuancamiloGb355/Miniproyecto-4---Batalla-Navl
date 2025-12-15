@@ -60,25 +60,53 @@ public class OpponentController {
     // ---------------------------
     private void revealShips() {
         for (Ship ship : machine.getFleet()) {
+            // Elegir la imagen según el nombre real del barco
             String imgName =
                     ship.getName().toLowerCase().contains("carrier") ? "carrier.png" :
                             ship.getName().toLowerCase().contains("submarine") ? "submarine.png" :
                                     ship.getName().toLowerCase().contains("destroyer") ? "destroyer.png" :
                                             "plane.png";
 
-            for (int[] pos : ship.getPositions()) {
-                StackPane cell = getNodeFromGridPane(opponentBoard, pos[0], pos[1]);
-                if (cell != null) {
-                    ImageView shipImg = new ImageView(
-                            new Image(getClass().getResourceAsStream(
-                                    "/edu/univalle/battleship/images/" + imgName)));
-                    shipImg.setFitWidth(40);
-                    shipImg.setFitHeight(40);
-                    cell.getChildren().add(shipImg);
-                }
+            // Tomar la primera posición del barco para ubicar la imagen
+            int[][] positions = ship.getPositions();
+            int startRow = positions[0][0];
+            int startCol = positions[0][1];
+            boolean horizontal = positions.length > 1 && positions[0][0] == positions[1][0];
+            int shipSize = positions.length;
+
+            Image img = new Image(getClass().getResourceAsStream(
+                    "/edu/univalle/battleship/images/" + imgName));
+            ImageView shipView = new ImageView(img);
+
+            shipView.setMouseTransparent(true);
+
+            // Ajustar tamaño y rotación según orientación
+            if (horizontal) {
+                shipView.setRotate(-90);
+                shipView.setFitWidth(40);
+                shipView.setFitHeight(40 * shipSize);
+                double offset = (shipSize - 1) * 20.0;
+                shipView.setTranslateX(offset);
+                shipView.setTranslateY(0);
+            } else {
+                shipView.setFitWidth(40);
+                shipView.setFitHeight(40 * shipSize);
             }
+
+            // Colocar en GridPane
+            GridPane.setRowIndex(shipView, startRow);
+            GridPane.setColumnIndex(shipView, startCol);
+            if (horizontal) {
+                GridPane.setColumnSpan(shipView, shipSize);
+            } else {
+                GridPane.setRowSpan(shipView, shipSize);
+            }
+
+            opponentBoard.getChildren().add(shipView);
         }
     }
+
+
 
     // ---------------------------
     // CREAR TABLERO
