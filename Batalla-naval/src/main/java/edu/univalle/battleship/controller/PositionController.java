@@ -5,6 +5,7 @@ import edu.univalle.battleship.model.Orientation;
 import edu.univalle.battleship.model.Player;
 import edu.univalle.battleship.model.Ship;
 import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
@@ -29,7 +30,7 @@ public class PositionController {
     PlaneTextFileHandler planeTextFileHandler;
 
     @FXML
-    private Button btnStartGame;
+    public Button btnStartGame;
 
     private int totalShipsToPlace = 10;
     private int shipsPlaced = 0;
@@ -74,6 +75,13 @@ public class PositionController {
         setupGrid();
         renderBoard();   // Create 10×10 board
         loadFleet();     // Add ships to bottom HBox
+
+        javafx.application.Platform.runLater(() -> {
+            playerBoard.getScene().setUserData(this);
+        });
+
+        GameManager.getInstance().setPositionController(this);
+
     }
 
     private void setupGrid() {
@@ -89,9 +97,23 @@ public class PositionController {
         }
     }
 
+    public void clearShotsOnly() {
+        for (var node : playerBoard.getChildren()) {
+            if (node instanceof StackPane cell) {
+                if (cell.getChildren().size() > 1) {
+                    // Mantiene el barco y elimina hit/miss/sink
+                    cell.getChildren().remove(1, cell.getChildren().size());
+                }
+            }
+        }
+    }
+
+
     @FXML
     private void handleStartGame() {
         try {
+
+            btnStartGame.setDisable(true);
 
             Player human = new Player();
 
@@ -158,6 +180,7 @@ public class PositionController {
 
         } catch (IOException e) {
             e.printStackTrace();
+            btnStartGame.setDisable(false);
         }
     }
 
@@ -193,6 +216,8 @@ public class PositionController {
             }
         }
     }
+
+
 
     //----------------------------
     // LOAD SHIPS IN THE FLEET BOX

@@ -2,6 +2,7 @@ package edu.univalle.battleship.controller;
 
 import edu.univalle.battleship.model.*;
 import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -50,6 +51,8 @@ public class OpponentController {
                 });
             }
         });
+
+
     }
 
     // ---------------------------
@@ -175,8 +178,19 @@ public class OpponentController {
                     System.out.println("Sunk " + sunkShipName + "! You can shoot again.");
 
                     if (GameManager.getInstance().isMachineDefeated()) {
+                        PositionController pc =
+                                GameManager.getInstance().getPositionController();
+
+                        if (pc != null) {
+                            Platform.runLater(() -> {
+                                pc.clearShotsOnly();
+                                pc.btnStartGame.setDisable(false);
+                                pc.btnStartGame.setText("Try again");
+                            });
+                        }
+
                         closeWindow();
-                        showEndMessage("GANASTE");
+                        endGame("GANASTE 🎉");
                         return;
                     }
                 }
@@ -230,8 +244,19 @@ public class OpponentController {
         }
 
         if (GameManager.getInstance().isHumanDefeated()) {
+            PositionController pc =
+                    GameManager.getInstance().getPositionController();
+
+            if (pc != null) {
+                Platform.runLater(() -> {
+                    pc.clearShotsOnly();
+                    pc.btnStartGame.setDisable(false);
+                    pc.btnStartGame.setText("Try again");
+                });
+            }
+
             closeWindow();
-            showEndMessage("PERDISTE");
+            endGame("PERDISTE 💀");
             return;
         }
 
@@ -291,4 +316,26 @@ public class OpponentController {
         javafx.stage.Stage stage = (javafx.stage.Stage) opponentBoard.getScene().getWindow();
         stage.close();
     }
+
+    private void endGame(String message) {
+
+        // Mostrar mensaje
+        showEndMessage(message);
+
+        // Cerrar ventana del oponente
+        Stage stage = (Stage) root.getScene().getWindow();
+        stage.close();
+
+        // Reset GameManager
+        GameManager.getInstance().resetGame();
+
+        // Obtener PositionController y resetear tablero
+        PositionController pc =
+                (PositionController) GameManager.getInstance()
+                        .getPlayerBoardGrid()
+                        .getScene()
+                        .getUserData();
+
+    }
+
 }

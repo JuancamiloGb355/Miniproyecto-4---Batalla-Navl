@@ -1,5 +1,6 @@
 package edu.univalle.battleship.model;
 
+import edu.univalle.battleship.controller.PositionController;
 import javafx.scene.layout.GridPane;
 
 import java.io.Serializable;
@@ -16,6 +17,36 @@ public class GameManager implements Serializable {
     private GameManager() {}
 
     private GridPane playerBoardGrid;
+
+    private boolean gameOver = false;
+
+    private transient PositionController positionController;
+
+    public void setPositionController(PositionController pc) {
+        this.positionController = pc;
+    }
+
+    public PositionController getPositionController() {
+        return positionController;
+    }
+
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void checkGameOver() {
+        if (isHumanDefeated() || isMachineDefeated()) {
+            gameOver = true;
+        }
+    }
+
+    public void resetGame() {
+        this.human = null;
+        this.machine = null;
+        this.isPlayerTurn = true;
+    }
+
 
     public GridPane getPlayerBoardGrid() {
         return playerBoardGrid;
