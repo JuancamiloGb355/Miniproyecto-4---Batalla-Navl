@@ -380,10 +380,20 @@ public class PositionController {
                 cell.getChildren().removeIf(n -> n instanceof ImageView);
 
                 switch (cells[r][c]) {
-                    case 2 -> addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
-                    case 3 -> addImageToCell(cell, "/edu/univalle/battleship/images/sink.png");
-                    case 4 -> addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+                    case 2 -> {
+                        cell.getChildren().removeIf(n -> n instanceof ImageView);
+                        addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
+                    }
+                    case 3 -> {
+                        cell.getChildren().removeIf(n -> n instanceof ImageView);
+                        addImageToCell(cell, "/edu/univalle/battleship/images/sink.png");
+                    }
+                    case 4 -> {
+                        cell.getChildren().removeIf(n -> n instanceof ImageView);
+                        addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+                    }
                 }
+
             }
         }
     }

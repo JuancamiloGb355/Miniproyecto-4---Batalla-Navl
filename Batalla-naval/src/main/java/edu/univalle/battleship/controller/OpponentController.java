@@ -132,7 +132,7 @@ public class OpponentController {
                 cells[row][col] = 4;
                 addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
                 gm.setPlayerTurn(false);
-                machineTurn();
+                machineTurnWithDelay();
                 break;
             default:
                 if (result.startsWith("sunk:")) {
@@ -164,63 +164,74 @@ public class OpponentController {
         }
     }
 
-    private void machineTurn() {
+    private void machineTurnWithDelay() {
+        PauseTransition delay = new PauseTransition(Duration.seconds(0.7));
+        delay.setOnFinished(e -> machineTurnLogic());
+        delay.play();
+    }
+
+    private void machineTurnLogic() {
         MachinePlayer machine = GameManager.getInstance().getMachine();
         Player human = GameManager.getInstance().getHuman();
         GridPane playerBoard = GameManager.getInstance().getPlayerBoardGrid();
         int[][] cells = human.getBoard().getCells();
 
-        // Ejecutar el disparo después de un pequeño delay
-        PauseTransition delay = new PauseTransition(Duration.seconds(0.7));
-        delay.setOnFinished(e -> {
-            String result = machine.shoot(human);
-            int[] last = machine.getLastShotCoordinates();
-            int row = last[0];
-            int col = last[1];
+        String result = machine.shoot(human);
+        int[] last = machine.getLastShotCoordinates();
+        int row = last[0];
+        int col = last[1];
 
-            StackPane targetCell = getNodeFromGridPane(playerBoard, row, col);
+        StackPane targetCell = getNodeFromGridPane(playerBoard, row, col);
 
-            if (result.equals("miss")) cells[row][col] = 4;
-            else if (result.equals("hit")) cells[row][col] = 2;
-            else if (result.startsWith("sunk:")) {
-                String sunkName = result.split(":")[1].trim();
-                Ship sunkShip = human.getFleet().stream()
-                        .filter(s -> s.getName().trim().equals(sunkName))
-                        .findFirst().orElse(null);
-                if (sunkShip != null) {
-                    for (int[] pos : sunkShip.getPositions()) {
-                        StackPane cellToSink = getNodeFromGridPane(playerBoard, pos[0], pos[1]);
-                        if (cellToSink != null) {
-                            cells[pos[0]][pos[1]] = 3;
-                            cellToSink.getChildren().clear();
-                            addImageToCell(cellToSink, "/edu/univalle/battleship/images/sink.png");
-                        }
+        if (result.equals("miss")) {
+            cells[row][col] = 4;
+        } else if (result.equals("hit")) {
+            cells[row][col] = 2;
+        } else if (result.startsWith("sunk:")) {
+            String sunkName = result.split(":")[1].trim();
+            Ship sunkShip = human.getFleet().stream()
+                    .filter(s -> s.getName().trim().equals(sunkName))
+                    .findFirst().orElse(null);
+
+            if (sunkShip != null) {
+                for (int[] pos : sunkShip.getPositions()) {
+                    StackPane cellToSink = getNodeFromGridPane(playerBoard, pos[0], pos[1]);
+                    if (cellToSink != null) {
+                        cells[pos[0]][pos[1]] = 3;
+                        cellToSink.getChildren().removeIf(n -> n instanceof ImageView);
+                        addImageToCell(cellToSink, "/edu/univalle/battleship/images/sink.png");
                     }
                 }
             }
+        }
 
-            // Mostrar imagen del disparo
-            if (targetCell != null) {
-                if (cells[row][col] == 2) addImageToCell(targetCell, "/edu/univalle/battleship/images/hit.png");
-                else if (cells[row][col] == 3) addImageToCell(targetCell, "/edu/univalle/battleship/images/sink.png");
-                else if (cells[row][col] == 4) addImageToCell(targetCell, "/edu/univalle/battleship/images/miss.png");
-            }
+        // Pintar disparo actual
+        if (targetCell != null) {
+            targetCell.getChildren().removeIf(n -> n instanceof ImageView);
 
-            if (GameManager.getInstance().isHumanDefeated()) {
-                closeWindow();
-                endGame("¡HAS PERDIDO!");
-                return;
-            }
+            if (cells[row][col] == 2)
+                addImageToCell(targetCell, "/edu/univalle/battleship/images/hit.png");
+            else if (cells[row][col] == 3)
+                addImageToCell(targetCell, "/edu/univalle/battleship/images/sink.png");
+            else if (cells[row][col] == 4)
+                addImageToCell(targetCell, "/edu/univalle/battleship/images/miss.png");
+        }
 
-            // Si acertó, vuelve a disparar con delay; si falló, cambia turno
-            if (result.equals("miss")) {
-                GameManager.getInstance().setPlayerTurn(true);
-            } else {
-                machineTurn();
-            }
-        });
-        delay.play();
+        if (GameManager.getInstance().isHumanDefeated()) {
+            closeWindow();
+            endGame("¡HAS PERDIDO!");
+            return;
+        }
+
+        // 👇 AQUÍ ESTÁ LA CLAVE
+        if (result.equals("miss")) {
+            GameManager.getInstance().setPlayerTurn(true);
+        } else {
+            machineTurnWithDelay(); // ⏳ siguiente disparo TAMBIÉN con delay
+        }
     }
+
+
 
 
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
