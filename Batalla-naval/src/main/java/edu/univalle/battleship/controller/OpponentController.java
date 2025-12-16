@@ -16,8 +16,12 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.IOException;
-
+/**
+ * Controller for the opponent board.
+ * <p>
+ * Handles the interaction between the human player and the machine player.
+ * Manages shooting, showing hits/misses/sunk ships, machine AI moves, and saving/exiting.
+ */
 public class OpponentController {
 
     @FXML
@@ -36,6 +40,10 @@ public class OpponentController {
 
     private PlaneTextFileHandler planeTextFileHandler;
 
+    /**
+     * JavaFX initialization method.
+     * Initializes the human and machine players, sets up the opponent board, and listens for key events.
+     */
     @FXML
     public void initialize() {
         GameManager gm = GameManager.getInstance();
@@ -57,6 +65,9 @@ public class OpponentController {
         });
     }
 
+    /**
+     * Reveals all machine ships on the board, for debugging or cheat purposes.
+     */
     private void revealShips() {
         for (Ship ship : machine.getFleet()) {
             String imgName =
@@ -95,6 +106,9 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Creates the opponent board UI, with 40x40 cells and click handlers for shots.
+     */
     private void createBoard() {
         int size = Board.SIZE;
 
@@ -111,6 +125,14 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Handles a shot by the human player on a given cell.
+     * Updates the board array, adds images, and triggers machine turn if necessary.
+     *
+     * @param row  row index of the shot
+     * @param col  column index of the shot
+     * @param cell the StackPane cell clicked
+     */
     private void handleShot(int row, int col, StackPane cell) {
         GameManager gm = GameManager.getInstance();
 
@@ -164,12 +186,21 @@ public class OpponentController {
         }
     }
 
+
+    /**
+     * Executes the machine's turn after a small delay.
+     */
     private void machineTurnWithDelay() {
         PauseTransition delay = new PauseTransition(Duration.seconds(0.7));
         delay.setOnFinished(e -> machineTurnLogic());
         delay.play();
     }
 
+    /**
+     * Handles the machine's shooting logic.
+     * Updates the human player's board, images, and ship hit status.
+     * Checks for victory/defeat conditions.
+     */
     private void machineTurnLogic() {
         MachinePlayer machine = GameManager.getInstance().getMachine();
         Player human = GameManager.getInstance().getHuman();
@@ -252,7 +283,14 @@ public class OpponentController {
         }
     }
 
-
+    /**
+     * Finds a StackPane cell in a GridPane at the specified row and column.
+     *
+     * @param grid the GridPane
+     * @param row  the row index
+     * @param col  the column index
+     * @return the StackPane cell or null if not found
+     */
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
         for (Node node : grid.getChildren()) {
             Integer r = GridPane.getRowIndex(node);
@@ -264,6 +302,12 @@ public class OpponentController {
         return null;
     }
 
+    /**
+     * Adds an image to a specific cell.
+     *
+     * @param cell the target cell
+     * @param path path of the image resource
+     */
     private void addImageToCell(StackPane cell, String path) {
         ImageView img = new ImageView(new Image(getClass().getResourceAsStream(path)));
         img.setFitWidth(40);
@@ -271,11 +315,19 @@ public class OpponentController {
         cell.getChildren().add(img);
     }
 
+    /**
+     * Closes the opponent board window.
+     */
     private void closeWindow() {
         Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
 
+    /**
+     * Shows a game-end message and resets the game state.
+     *
+     * @param message the message to show
+     */
     private void endGame(String message) {
         Platform.runLater(() -> {
             javafx.scene.control.Alert alert =
@@ -288,7 +340,9 @@ public class OpponentController {
         });
     }
 
-
+    /**
+     * Handles saving the game state and exiting the opponent board.
+     */
     @FXML
     private void handleSaveExit() {
         if (human != null && machine != null) GameStateHandler.saveGame(human, machine);
@@ -296,6 +350,10 @@ public class OpponentController {
         stage.close();
     }
 
+    /**
+     * Rebuilds the opponent board from the machine's current board state.
+     * Displays hits, misses, and sunk ships.
+     */
     public void rebuildOpponentBoard() {
         opponentBoard.getChildren().clear();
         int size = Board.SIZE;
@@ -320,9 +378,14 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Sets the human and machine players for this controller.
+     *
+     * @param human   the human player
+     * @param machine the machine player
+     */
     public void setPlayers(Player human, MachinePlayer machine) {
         this.human = human;
         this.machine = machine;
     }
-
 }

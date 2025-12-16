@@ -1,8 +1,6 @@
 package edu.univalle.battleship.controller;
 
 import edu.univalle.battleship.model.*;
-import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -13,24 +11,38 @@ import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 import java.io.IOException;
 
+/**
+ * Controller for the start screen of the Battleship game.
+ * <p>
+ * Handles the "Play" button for a new game and the "Continue" button to load a saved game.
+ */
 public class StartController {
-
-    PlaneTextFileHandler planeTextFileHandler;
 
     @FXML
     private Button playButton;
 
     private StartModel model;
 
+    /**
+     * Default constructor. Initializes the model.
+     */
     public StartController() {
         model = new StartModel();
     }
 
+    /**
+     * Called automatically by JavaFX after the FXML elements are loaded.
+     */
     @FXML
     private void initialize() {
-        System.out.println("StartController inicializado");
+        System.out.println("StartController initialized");
     }
 
+    /**
+     * Handles the "Play" button click to start a new game.
+     *
+     * @param event the action event triggered by clicking the play button
+     */
     @FXML
     private void handlePlay(ActionEvent event) {
         try {
@@ -41,7 +53,7 @@ public class StartController {
             stage.setScene(new Scene(root));
             stage.show();
 
-            // Inicializa el tablero para un juego nuevo
+            // Initialize the board for a new game
             PositionController pc = loader.getController();
             Player human = new Player();
             pc.setupForNewGame(human);
@@ -54,27 +66,29 @@ public class StartController {
         }
     }
 
-    @FXML
-    private Button continueButton;
-
+    /**
+     * Handles the "Continue" button click to load a saved game.
+     * <p>
+     * Loads the human player and machine player from a save file, updates the GameManager,
+     * rebuilds the player and opponent boards, and restores hits, misses, and sunk ships.
+     */
     @FXML
     private void handleContinue() {
-        // Cargar jugadores desde archivo
+        // Load saved players
         Player loadedPlayer = GameStateHandler.loadPlayer();
         MachinePlayer loadedMachine = GameStateHandler.loadMachine();
 
         if (loadedPlayer == null || loadedMachine == null) {
-            System.out.println("No se encontró partida guardada.");
+            System.out.println("No saved game found.");
             return;
         }
 
-        // Actualizar GameManager
         GameManager gm = GameManager.getInstance();
         gm.setHuman(loadedPlayer);
         gm.setMachine(loadedMachine);
 
         try {
-            // Ventana del jugador
+            // Player window
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/edu/univalle/battleship/positionView.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) playButton.getScene().getWindow();
@@ -85,31 +99,28 @@ public class StartController {
             gm.setPositionController(pc);
             gm.setPlayerBoardGrid(pc.getPlayerBoard());
             pc.setPlayer(loadedPlayer);
-            pc.setPlayer(loadedPlayer);
 
-            // 1️⃣ primero barcos
+            // Rebuild player board and shots
             pc.rebuildPlayerBoard();
-
-            // 2️⃣ luego hits / miss / sunk
             pc.rebuildPlayerShotsOnly();
 
-
-            // Ventana del enemigo
+            // Opponent window
             FXMLLoader enemyLoader = new FXMLLoader(getClass().getResource("/edu/univalle/battleship/enemyPreviewView.fxml"));
             Parent enemyRoot = enemyLoader.load();
             Stage enemyStage = new Stage();
             enemyStage.setScene(new Scene(enemyRoot));
-            enemyStage.setTitle("Tablero Maquina");
+            enemyStage.setTitle("Machine Board");
             enemyStage.show();
 
             OpponentController enemyController = enemyLoader.getController();
-            enemyController.setPlayers(loadedPlayer, loadedMachine); // Asegúrate de tener este método
-            enemyController.rebuildOpponentBoard(); // Reconstruye barcos y disparos de la máquina
+            enemyController.setPlayers(loadedPlayer, loadedMachine);
+            enemyController.rebuildOpponentBoard();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Partida cargada correctamente.");
+
+        System.out.println("Saved game loaded successfully.");
     }
 
 }
