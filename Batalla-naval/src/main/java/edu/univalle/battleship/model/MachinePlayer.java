@@ -1,5 +1,6 @@
 package edu.univalle.battleship.model;
 
+import edu.univalle.battleship.designpatterns.strategy.HuntTargetShootingStrategy;
 import edu.univalle.battleship.designpatterns.strategy.IShootingStrategy;
 import edu.univalle.battleship.designpatterns.strategy.RandomShootingStrategy;
 
@@ -23,7 +24,7 @@ public class MachinePlayer implements Serializable {
     public MachinePlayer() {
         this.board = new Board();
         this.fleet = new ArrayList<>();
-        this.strategy = new RandomShootingStrategy();
+        this.strategy = new HuntTargetShootingStrategy(); //ELEGIR LA IA
         this.random = new Random();
     }
 
@@ -73,6 +74,11 @@ public class MachinePlayer implements Serializable {
         }
     }
 
+    public int[] getLastShotCoordinates() {
+        return strategy.getLastShotCoordinates();
+    }
+
+
 
     /**
      * La maquina dispara al tablero del jugador usando una estrategia.
@@ -80,15 +86,6 @@ public class MachinePlayer implements Serializable {
      */
     public String shoot(Player player) {
         return strategy.shoot(player.getBoard());
-    }
-
-    public int[] getLastShotCoordinates() {
-        if (strategy instanceof edu.univalle.battleship.designpatterns.strategy.RandomShootingStrategy) {
-            return ((edu.univalle.battleship.designpatterns.strategy.RandomShootingStrategy) strategy)
-                    .getLastShotCoordinates();
-        }
-
-        return new int[]{-1, -1};
     }
 }
 

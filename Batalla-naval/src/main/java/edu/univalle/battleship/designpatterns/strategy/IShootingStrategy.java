@@ -8,4 +8,9 @@ public interface IShootingStrategy {
      * "hit", "miss", "sunk:Nombre", etc.
      */
     String shoot(Board board);
+
+    int[] getLastShotCoordinates();
+
+    int[] selectTarget(Board board);
+
 }

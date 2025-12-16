@@ -5,27 +5,33 @@ import java.util.Random;
 
 public class RandomShootingStrategy implements IShootingStrategy {
 
-    private final Random random = new Random();
-
     private int lastRow;
     private int lastCol;
+    private final Random random = new Random();
+
+    @Override
+    public int[] selectTarget(Board board) {
+        int r, c;
+        int[][] cells = board.getCells();
+
+        do {
+            r = random.nextInt(Board.SIZE);
+            c = random.nextInt(Board.SIZE);
+        } while (cells[r][c] != 0 && cells[r][c] != 1);
+
+        return new int[]{r, c};
+    }
 
     @Override
     public String shoot(Board board) {
-        int row, col;
-
-        // Comprobar si la celda ya fue disparada
-        do {
-            row = random.nextInt(Board.SIZE);
-            col = random.nextInt(Board.SIZE);
-        } while (board.getCells()[row][col] >= 2); // >=2 significa hit, sunk o miss
-
-        lastRow = row;
-        lastCol = col;
-
-        return board.receiveShot(row, col);
+        int[] pos = selectTarget(board);
+        lastRow = pos[0];
+        lastCol = pos[1];
+        return board.receiveShot(lastRow, lastCol);
     }
 
+
+    @Override
     public int[] getLastShotCoordinates() {
         return new int[]{lastRow, lastCol};
     }
