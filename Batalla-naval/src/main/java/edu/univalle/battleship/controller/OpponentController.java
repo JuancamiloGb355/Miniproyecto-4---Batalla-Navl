@@ -3,7 +3,6 @@ package edu.univalle.battleship.controller;
 import edu.univalle.battleship.model.*;
 import edu.univalle.battleship.model.planeTextFiles.PlaneTextFileHandler;
 import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -16,26 +15,41 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.IOException;
-
+/**
+ * Controller class for handling the opponent's board in the Battleship game.
+ * Manages the opponent grid, handles player's shots, reveals ships,
+ * and controls the machine player's turn logic.
+ */
 public class OpponentController {
 
+    /** GridPane representing the opponent's board. */
     @FXML
     private GridPane opponentBoard;
 
+    /** Root layout for the scene. */
     @FXML
     BorderPane root;
 
+    /** Button to save the game and exit. */
     @FXML
     private Button btnSaveExit;
 
+    /** AI-controlled opponent player. */
     private MachinePlayer machine;
+
+    /** Human player. */
     private Player human;
 
+    /** Counter for the number of opponent ships sunk by the player. */
     private int numberOfSunkenShips = 0;
 
+    /** Handler for reading/writing plain text files. */
     private PlaneTextFileHandler planeTextFileHandler;
 
+    /**
+     * Initializes the opponent board controller.
+     * Sets up the board, assigns players, and configures key events.
+     */
     @FXML
     public void initialize() {
         GameManager gm = GameManager.getInstance();
@@ -57,6 +71,9 @@ public class OpponentController {
         });
     }
 
+    /**
+     * Reveals all opponent ships on the board with their respective images.
+     */
     private void revealShips() {
         for (Ship ship : machine.getFleet()) {
             String imgName =
@@ -95,6 +112,9 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Creates an empty opponent board and configures click events for each cell.
+     */
     private void createBoard() {
         int size = Board.SIZE;
 
@@ -111,17 +131,22 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Handles a shot fired by the player at a given cell.
+     *
+     * @param row  The row index of the cell.
+     * @param col  The column index of the cell.
+     * @param cell The StackPane representing the target cell.
+     */
     private void handleShot(int row, int col, StackPane cell) {
         GameManager gm = GameManager.getInstance();
-
-        if (!gm.isPlayerTurn()) return;
 
         Board board = machine.getBoard();
         int[][] cells = board.getCells();
 
-        if (cells[row][col] >= 2) return; // ya fue disparado
+        if (cells[row][col] >= 2) return; // Already shot
 
-        String result = board.receiveShot(row, col); // recibe hit/miss/sunk y actualiza array
+        String result = board.receiveShot(row, col); // hit/miss/sunk
 
         switch (result) {
             case "hit":
@@ -164,12 +189,18 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Starts the machine player's turn after a short delay.
+     */
     private void machineTurnWithDelay() {
         PauseTransition delay = new PauseTransition(Duration.seconds(0.7));
         delay.setOnFinished(e -> machineTurnLogic());
         delay.play();
     }
 
+    /**
+     * Executes the machine player's shooting logic and updates the player's board.
+     */
     private void machineTurnLogic() {
         MachinePlayer machine = GameManager.getInstance().getMachine();
         Player human = GameManager.getInstance().getHuman();
@@ -205,7 +236,6 @@ public class OpponentController {
             }
         }
 
-        // Pintar disparo actual
         if (targetCell != null) {
             targetCell.getChildren().removeIf(n -> n instanceof ImageView);
 
@@ -223,17 +253,21 @@ public class OpponentController {
             return;
         }
 
-        // 👇 AQUÍ ESTÁ LA CLAVE
         if (result.equals("miss")) {
             GameManager.getInstance().setPlayerTurn(true);
         } else {
-            machineTurnWithDelay(); // ⏳ siguiente disparo TAMBIÉN con delay
+            machineTurnWithDelay();
         }
     }
 
-
-
-
+    /**
+     * Retrieves the StackPane node at a specific row and column from a GridPane.
+     *
+     * @param grid The GridPane to search.
+     * @param row  The target row.
+     * @param col  The target column.
+     * @return The StackPane at the specified coordinates, or null if not found.
+     */
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
         for (Node node : grid.getChildren()) {
             Integer r = GridPane.getRowIndex(node);
@@ -245,6 +279,12 @@ public class OpponentController {
         return null;
     }
 
+    /**
+     * Adds an image to a cell.
+     *
+     * @param cell The target StackPane cell.
+     * @param path The resource path of the image.
+     */
     private void addImageToCell(StackPane cell, String path) {
         ImageView img = new ImageView(new Image(getClass().getResourceAsStream(path)));
         img.setFitWidth(40);
@@ -252,11 +292,19 @@ public class OpponentController {
         cell.getChildren().add(img);
     }
 
+    /**
+     * Closes the current window.
+     */
     private void closeWindow() {
         Stage stage = (Stage) root.getScene().getWindow();
         stage.close();
     }
 
+    /**
+     * Displays the game end alert and resets the game state.
+     *
+     * @param message The message to show in the alert.
+     */
     private void endGame(String message) {
         javafx.scene.control.Alert alert =
                 new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
@@ -267,6 +315,10 @@ public class OpponentController {
         GameManager.getInstance().resetGame();
     }
 
+    /**
+     * Handles the save and exit button action.
+     * Saves the current game state before closing the window.
+     */
     @FXML
     private void handleSaveExit() {
         if (human != null && machine != null) GameStateHandler.saveGame(human, machine);
@@ -274,6 +326,9 @@ public class OpponentController {
         stage.close();
     }
 
+    /**
+     * Rebuilds the opponent board, updating the UI to reflect hits, misses, and sunk ships.
+     */
     public void rebuildOpponentBoard() {
         opponentBoard.getChildren().clear();
         int size = Board.SIZE;
@@ -298,9 +353,14 @@ public class OpponentController {
         }
     }
 
+    /**
+     * Sets the human and machine players for this controller.
+     *
+     * @param human   The human player.
+     * @param machine The machine player.
+     */
     public void setPlayers(Player human, MachinePlayer machine) {
         this.human = human;
         this.machine = machine;
     }
-
 }

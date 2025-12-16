@@ -19,26 +19,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+/**
+ * Controller class for positioning the player's ships before starting the Battleship game.
+ * Handles ship placement, drag-and-drop, orientation changes, and board rendering.
+ */
 public class PositionController {
 
+    /** GridPane representing the player's board. */
     @FXML
     private GridPane playerBoard;
 
+    /** HBox container holding the available ships for placement. */
     @FXML
     private HBox fleetBox;
 
+    /** Button to toggle ship orientation between horizontal and vertical. */
     @FXML
     private Button btnOrientation;
 
+    /** Button to start the game once all ships are placed. */
     @FXML
     public Button btnStartGame;
 
+    /** Current ship orientation; true = horizontal, false = vertical. */
     private boolean horizontal = false;
+
+    /** Counter for ships placed on the board. */
     private int shipsPlaced = 0;
+
+    /** Total number of ships that must be placed before starting. */
     private final int totalShipsToPlace = 10;
 
+    /** Player object representing the human player. */
     private Player player;
 
+    /** Map storing ship sizes for each ship image file. */
     private final Map<String, Integer> shipSizes = Map.of(
             "carrier.png", 4,
             "submarine.png", 3,
@@ -46,6 +61,7 @@ public class PositionController {
             "plane.png", 1
     );
 
+    /** Map storing the maximum allowed copies of each ship type. */
     private final Map<String, Integer> shipLimits = Map.of(
             "carrier.png", 1,
             "submarine.png", 2,
@@ -53,9 +69,23 @@ public class PositionController {
             "plane.png", 4
     );
 
+    /**
+     * Sets the player object for this controller.
+     *
+     * @param player The human player.
+     */
     public void setPlayer(Player player) { this.player = player; }
+
+    /**
+     * Returns the GridPane representing the player's board.
+     *
+     * @return Player's board GridPane.
+     */
     public GridPane getPlayerBoard() { return playerBoard; }
 
+    /**
+     * Initializes the controller, configures buttons, and sets up the board grid.
+     */
     @FXML
     public void initialize() {
         btnStartGame.setVisible(false);
@@ -71,6 +101,11 @@ public class PositionController {
         GameManager.getInstance().setPositionController(this);
     }
 
+    /**
+     * Prepares the controller for a new game with a given player.
+     *
+     * @param player The human player.
+     */
     public void setupForNewGame(Player player) {
         this.player = player;
         shipsPlaced = 0;
@@ -78,6 +113,7 @@ public class PositionController {
         loadFleet();
     }
 
+    /** Sets up the GridPane constraints for the board. */
     private void setupGrid() {
         for (int i = 0; i < Board.SIZE; i++) {
             ColumnConstraints col = new ColumnConstraints(40);
@@ -89,6 +125,7 @@ public class PositionController {
         }
     }
 
+    /** Renders the board with empty cells and configures drag-and-drop events. */
     private void renderBoard() {
         for (int r = 0; r < Board.SIZE; r++) {
             for (int c = 0; c < Board.SIZE; c++) {
@@ -111,6 +148,7 @@ public class PositionController {
         }
     }
 
+    /** Loads all ships into the fleetBox for placement on the board. */
     private void loadFleet() {
         for (String fileName : shipLimits.keySet()) {
             int copies = shipLimits.get(fileName);
@@ -118,6 +156,11 @@ public class PositionController {
         }
     }
 
+    /**
+     * Adds a single ship to the fleetBox with drag-and-drop enabled.
+     *
+     * @param fileName Image file representing the ship.
+     */
     private void addShip(String fileName) {
         Image img = new Image(getClass().getResourceAsStream("/edu/univalle/battleship/images/" + fileName));
         int shipSize = shipSizes.get(fileName);
@@ -139,8 +182,14 @@ public class PositionController {
         fleetBox.getChildren().add(view);
     }
 
+    /**
+     * Handles the drop of a ship onto the board cell, updating the board state and UI.
+     *
+     * @param event The DragEvent triggered by dropping a ship.
+     * @param cell  The target cell StackPane.
+     */
     private void handleDrop(DragEvent event, StackPane cell) {
-        if (player == null) return; // 🔹 proteger null
+        if (player == null) return;
 
         Dragboard db = event.getDragboard();
         if (!db.hasString()) return;
@@ -151,17 +200,17 @@ public class PositionController {
         int col = GridPane.getColumnIndex(cell);
         int row = GridPane.getRowIndex(cell);
 
-        // Validación de límites
+        // Validate placement boundaries
         if ((horizontal && col + shipSize > Board.SIZE) || (!horizontal && row + shipSize > Board.SIZE)) return;
 
         int[][] boardCells = player.getBoard().getCells();
         for (int i = 0; i < shipSize; i++) {
             int r = row + (horizontal ? 0 : i);
             int c = col + (horizontal ? i : 0);
-            if (boardCells[r][c] == 1) return; // ya hay barco
+            if (boardCells[r][c] == 1) return; // Already occupied
         }
 
-        // Crear ImageView del barco
+        // Create ImageView for the ship
         Image img = new Image(getClass().getResourceAsStream("/edu/univalle/battleship/images/" + shipName));
         ImageView shipView = new ImageView(img);
         shipView.setUserData(shipName);
@@ -178,14 +227,14 @@ public class PositionController {
         GridPane.setRowSpan(shipView, horizontal ? 1 : shipSize);
         playerBoard.getChildren().add(shipView);
 
-        // Actualizar board
+        // Update board cells
         for (int i = 0; i < shipSize; i++) {
             int r = row + (horizontal ? 0 : i);
             int c = col + (horizontal ? i : 0);
             boardCells[r][c] = 1;
         }
 
-        // Registrar el barco en player
+        // Register ship in player object
         Orientation orient = horizontal ? Orientation.HORIZONTAL : Orientation.VERTICAL;
         Ship ship = new Ship(shipName, shipSize);
         ship.place(row, col, orient);
@@ -201,7 +250,7 @@ public class PositionController {
         if (shipsPlaced >= totalShipsToPlace) btnStartGame.setVisible(true);
     }
 
-
+    /** Handles the start game button, creating a new player and loading the opponent view. */
     @FXML
     private void handleStartGame() {
         try {
@@ -242,9 +291,12 @@ public class PositionController {
         }
     }
 
-    // ----------------------------------------
-// Añade una imagen a una celda, con validación
-// ----------------------------------------
+    /**
+     * Adds an image to a given cell safely.
+     *
+     * @param cell The target StackPane.
+     * @param path Path to the image resource.
+     */
     private void addImageToCell(StackPane cell, String path) {
         Image img = loadImage(path);
         if (img == null) return;
@@ -254,21 +306,27 @@ public class PositionController {
         cell.getChildren().add(iv);
     }
 
-    // ----------------------------------------
-// Método seguro para cargar imágenes
-// ----------------------------------------
+    /**
+     * Safely loads an image from the resource path.
+     *
+     * @param path Path to the image resource.
+     * @return The loaded Image object, or null if not found.
+     */
     private Image loadImage(String path) {
         InputStream is = getClass().getResourceAsStream(path);
         if (is == null) {
-            System.err.println("No se encontró la imagen: " + path);
+            System.err.println("Image not found: " + path);
             return null;
         }
         return new Image(is);
     }
 
-    // ----------------------------------------
-// Devuelve el nombre de la imagen según el barco
-// ----------------------------------------
+    /**
+     * Returns the standard image filename for a given ship name.
+     *
+     * @param shipName The name of the ship.
+     * @return Image file name corresponding to the ship.
+     */
     private String getShipImageName(String shipName) {
         shipName = shipName.toLowerCase();
         if (shipName.contains("carrier")) return "carrier.png";
@@ -277,6 +335,14 @@ public class PositionController {
         return "plane.png";
     }
 
+    /**
+     * Retrieves a StackPane from a GridPane at the given coordinates.
+     *
+     * @param grid GridPane to search.
+     * @param row  Row index.
+     * @param col  Column index.
+     * @return StackPane at the given coordinates, or null if not found.
+     */
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
         for (Node node : grid.getChildren()) {
             Integer r = GridPane.getRowIndex(node);
@@ -288,40 +354,16 @@ public class PositionController {
         return null;
     }
 
-    public void clearShotsOnly() {
-        for (var node : playerBoard.getChildren()) {
-            if (node instanceof StackPane cell && cell.getChildren().size() > 1) {
-                cell.getChildren().remove(1, cell.getChildren().size());
-            }
-        }
-    }
-    public void clearBoardView() {
-        for (Node node : playerBoard.getChildren()) {
-            if (node instanceof StackPane cell) {
-                cell.getChildren().clear();
-            }
-        }
-    }
-    public void restoreBoardCells(int[][] savedCells) {
-        int[][] cells = player.getBoard().getCells();
-        for (int r = 0; r < cells.length; r++) {
-            for (int c = 0; c < cells[r].length; c++) {
-                cells[r][c] = savedCells[r][c];
-            }
-        }
-    }
-
+    /** Rebuilds the player board view, including ships but not shot indicators. */
     public void rebuildPlayerBoard() {
         if (player == null) return;
 
-        // 🔹 Quitar SOLO imágenes (no el Rectangle)
         for (Node node : playerBoard.getChildren()) {
             if (node instanceof StackPane cell) {
                 cell.getChildren().removeIf(n -> n instanceof ImageView);
             }
         }
 
-        // 🔹 Dibujar barcos
         for (Ship ship : player.getFleet()) {
             int[][] pos = ship.getPositions();
             int size = pos.length;
@@ -350,6 +392,7 @@ public class PositionController {
         }
     }
 
+    /** Rebuilds only the shot indicators (hits, misses, sinks) on the board. */
     public void rebuildPlayerShotsOnly() {
         if (player == null) return;
 
@@ -361,27 +404,14 @@ public class PositionController {
                 StackPane cell = getNodeFromGridPane(playerBoard, r, c);
                 if (cell == null) continue;
 
-                // 🔹 quitar SOLO imágenes
                 cell.getChildren().removeIf(n -> n instanceof ImageView);
 
                 switch (cells[r][c]) {
-                    case 2 -> {
-                        cell.getChildren().removeIf(n -> n instanceof ImageView);
-                        addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
-                    }
-                    case 3 -> {
-                        cell.getChildren().removeIf(n -> n instanceof ImageView);
-                        addImageToCell(cell, "/edu/univalle/battleship/images/sink.png");
-                    }
-                    case 4 -> {
-                        cell.getChildren().removeIf(n -> n instanceof ImageView);
-                        addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
-                    }
+                    case 2 -> addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
+                    case 3 -> addImageToCell(cell, "/edu/univalle/battleship/images/sink.png");
+                    case 4 -> addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
                 }
-
             }
         }
     }
-
-
 }
