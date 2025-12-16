@@ -73,27 +73,28 @@ public class GameManager implements Serializable {
         this.positionController = null;
     }
 
-    public void checkGameOver() {
-        if (isHumanDefeated() || isMachineDefeated()) {
-            gameOver = true;
-        }
-    }
-
     public boolean isHumanDefeated() {
         if (human == null) return false;
-        int[][] board = human.getBoard().getCells();
 
-        // Contar barcos completos hundidos (opcional: aquí simplificamos contando hits tipo "sunk")
-        int sunkShips = countSunkShips(board, human.getFleet());
-        return sunkShips >= 10;
+        for (Ship ship : human.getFleet()) {
+            if (!ship.isSunk()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean isMachineDefeated() {
         if (machine == null) return false;
-        int[][] board = machine.getBoard().getCells();
-        int sunkShips = countSunkShips(board, machine.getFleet());
-        return sunkShips >= 10;
+
+        for (Ship ship : machine.getFleet()) {
+            if (!ship.isSunk()) {
+                return false;
+            }
+        }
+        return true;
     }
+
 
     // Método auxiliar para contar barcos hundidos
     private int countSunkShips(int[][] board, List<Ship> fleet) {
@@ -112,5 +113,8 @@ public class GameManager implements Serializable {
             if (sunk) count++;
         }
         return count;
+    }
+
+    public void endGame() {
     }
 }

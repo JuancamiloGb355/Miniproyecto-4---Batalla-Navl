@@ -37,6 +37,11 @@ public class Player implements Serializable {
      * Devuelve true si todos los barcos del jugador estan hundidos.
      */
     public boolean hasLost() {
-        return board.allShipsSunk();
+        for (Ship ship : fleet) {
+            if (!ship.isSunk()) {
+                return false;
+            }
+        }
+        return true;
     }
 }
