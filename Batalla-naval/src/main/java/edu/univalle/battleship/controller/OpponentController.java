@@ -181,6 +181,8 @@ public class OpponentController {
                         endGame("¡HAS GANADO!");
                         return;
                     }
+
+                    if (human != null && machine != null) GameStateHandler.saveGame(human, machine);
                 }
                 break;
         }
@@ -281,6 +283,8 @@ public class OpponentController {
         } else {
             machineTurnWithDelay(); // Si fue un "hit" o "sunk", sigue el turno de la máquina con delay
         }
+
+        GameStateHandler.saveGame(human, machine);
     }
 
     /**
