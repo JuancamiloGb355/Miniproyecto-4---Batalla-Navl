@@ -71,36 +71,6 @@ public class PositionController {
         GameManager.getInstance().setPositionController(this);
     }
 
-    @FXML
-    public void initializeContinue() {
-        btnStartGame.setVisible(false);
-
-        // Bloquear orientación (ya no se colocan barcos)
-        btnOrientation.setDisable(true);
-
-        setupGrid();
-        renderBoard();
-
-        // 🧹 Vaciar flota (pero dejar el HBox)
-        fleetBox.getChildren().clear();
-
-        // 🚫 Desactivar drag & drop en el tablero
-        disableDragAndDrop();
-
-        GameManager.getInstance().setPositionController(this);
-    }
-
-    private void disableDragAndDrop() {
-        for (Node node : playerBoard.getChildren()) {
-            if (node instanceof StackPane cell) {
-                cell.setOnDragOver(null);
-                cell.setOnDragDropped(null);
-            }
-        }
-    }
-
-
-
     public void setupForNewGame(Player player) {
         this.player = player;
         shipsPlaced = 0;

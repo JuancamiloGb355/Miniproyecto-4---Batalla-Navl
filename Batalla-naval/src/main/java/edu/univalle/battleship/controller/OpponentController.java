@@ -154,7 +154,7 @@ public class OpponentController {
                         }
                     }
 
-                    if (numberOfSunkenShips >= 10) {
+                    if (GameManager.getInstance().isMachineDefeated()) {
                         closeWindow();
                         endGame("¡HAS GANADO!");
                         return;
