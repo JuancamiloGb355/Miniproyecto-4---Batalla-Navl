@@ -96,21 +96,54 @@ public class HuntTargetShootingStrategy implements IShootingStrategy, Serializab
         int[][] cells = board.getCells();
 
         int[][] dirs = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1}
+                {-1, 0}, // arriba
+                {1, 0},  // abajo
+                {0, -1}, // izquierda
+                {0, 1}   // derecha
         };
 
+        // Si ya hay un hit previo en targets, priorizamos la dirección correcta
+        if (!targets.isEmpty()) {
+            int[] last = targets.peekLast(); // último hit agregado
+            int dr = r - last[0];
+            int dc = c - last[1];
+
+            if (dr != 0) { // misma columna
+                for (int[] d : dirs) {
+                    if (d[1] == 0) { // solo vertical
+                        int nr = r + d[0];
+                        int nc = c + d[1];
+                        if (nr >= 0 && nr < Board.SIZE && nc >= 0 && nc < Board.SIZE &&
+                                (cells[nr][nc] == 0 || cells[nr][nc] == 1)) {
+                            targets.addFirst(new int[]{nr, nc}); // prioridad
+                        }
+                    }
+                }
+                return;
+            } else if (dc != 0) { // misma fila
+                for (int[] d : dirs) {
+                    if (d[0] == 0) { // solo horizontal
+                        int nr = r + d[0];
+                        int nc = c + d[1];
+                        if (nr >= 0 && nr < Board.SIZE && nc >= 0 && nc < Board.SIZE &&
+                                (cells[nr][nc] == 0 || cells[nr][nc] == 1)) {
+                            targets.addFirst(new int[]{nr, nc}); // prioridad
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
+        // Si no hay hit previo, agregamos todos los vecinos normalmente
         for (int[] d : dirs) {
             int nr = r + d[0];
             int nc = c + d[1];
-
-            if (nr >= 0 && nr < Board.SIZE &&
-                    nc >= 0 && nc < Board.SIZE &&
+            if (nr >= 0 && nr < Board.SIZE && nc >= 0 && nc < Board.SIZE &&
                     (cells[nr][nc] == 0 || cells[nr][nc] == 1)) {
                 targets.add(new int[]{nr, nc});
             }
         }
     }
+
 }
