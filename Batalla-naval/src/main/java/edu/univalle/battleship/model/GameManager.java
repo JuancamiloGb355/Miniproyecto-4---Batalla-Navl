@@ -114,7 +114,4 @@ public class GameManager implements Serializable {
         }
         return count;
     }
-
-    public void endGame() {
-    }
 }

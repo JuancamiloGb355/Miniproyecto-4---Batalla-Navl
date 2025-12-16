@@ -176,13 +176,15 @@ public class OpponentController {
         GridPane playerBoard = GameManager.getInstance().getPlayerBoardGrid();
         int[][] cells = human.getBoard().getCells();
 
-        String result = machine.shoot(human);
-        int[] last = machine.getLastShotCoordinates();
+        // La máquina hace su disparo usando la estrategia
+        String result = machine.shoot(human); // Este método maneja la lógica de disparo
+        int[] last = machine.getLastShotCoordinates(); // Coordenadas del último disparo
         int row = last[0];
         int col = last[1];
 
         StackPane targetCell = getNodeFromGridPane(playerBoard, row, col);
 
+        // Maneja el resultado del disparo
         if (result.equals("miss")) {
             cells[row][col] = 4;
         } else if (result.equals("hit")) {
@@ -205,7 +207,7 @@ public class OpponentController {
             }
         }
 
-        // Pintar disparo actual
+        // Pintar disparo actual en la interfaz
         if (targetCell != null) {
             targetCell.getChildren().removeIf(n -> n instanceof ImageView);
 
@@ -217,21 +219,38 @@ public class OpponentController {
                 addImageToCell(targetCell, "/edu/univalle/battleship/images/miss.png");
         }
 
+        // Actualizar hits[] para cada barco humano
+        for (Ship ship : human.getFleet()) {
+            int[][] positions = ship.getPositions();
+            for (int i = 0; i < positions.length; i++) {
+                int r = positions[i][0];
+                int c = positions[i][1];
+                if (cells[r][c] == 2 || cells[r][c] == 3) {
+                    ship.hitAt(r, c);
+                }
+            }
+        }
+
+        // Verificar si alguien ha sido derrotado
         if (GameManager.getInstance().isHumanDefeated()) {
             closeWindow();
             endGame("¡HAS PERDIDO!");
             return;
         }
 
-        // 👇 AQUÍ ESTÁ LA CLAVE
+        if (GameManager.getInstance().isMachineDefeated()) {
+            closeWindow();
+            endGame("¡HAS GANADO!");
+            return;
+        }
+
+        // Si el disparo fue un "miss", se le da el turno al jugador
         if (result.equals("miss")) {
             GameManager.getInstance().setPlayerTurn(true);
         } else {
-            machineTurnWithDelay(); // ⏳ siguiente disparo TAMBIÉN con delay
+            machineTurnWithDelay(); // Si fue un "hit" o "sunk", sigue el turno de la máquina con delay
         }
     }
-
-
 
 
     private StackPane getNodeFromGridPane(GridPane grid, int row, int col) {
@@ -258,14 +277,17 @@ public class OpponentController {
     }
 
     private void endGame(String message) {
-        javafx.scene.control.Alert alert =
-                new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            javafx.scene.control.Alert alert =
+                    new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
 
-        GameManager.getInstance().resetGame();
+            GameManager.getInstance().resetGame();
+        });
     }
+
 
     @FXML
     private void handleSaveExit() {
