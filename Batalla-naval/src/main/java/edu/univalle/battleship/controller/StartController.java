@@ -99,7 +99,7 @@ public class StartController {
             Parent enemyRoot = enemyLoader.load();
             Stage enemyStage = new Stage();
             enemyStage.setScene(new Scene(enemyRoot));
-            enemyStage.setTitle("Opponent Board");
+            enemyStage.setTitle("Tablero Maquina");
             enemyStage.show();
 
             OpponentController enemyController = enemyLoader.getController();

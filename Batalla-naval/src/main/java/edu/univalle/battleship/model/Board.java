@@ -68,41 +68,44 @@ public class Board implements Serializable {
     }
 
     public String receiveShot(int row, int col) {
-        // 0 = agua, 1 = barco, 2 = hit, 3 = sunk, 4 = miss
-        if (cells[row][col] == 1) { // hay barco
-            cells[row][col] = 2; // marcar hit
 
+        if (cells[row][col] == 1) {
             Ship hitShip = getShipAt(row, col);
+
+            cells[row][col] = 2;
+
             if (hitShip != null) {
-                hitShip.hit(); // registrar hit
+                hitShip.hitAt(row, col);
+
                 if (hitShip.isSunk()) {
                     for (int[] pos : hitShip.getPositions()) {
-                        cells[pos[0]][pos[1]] = 3; // todas las celdas como sunk
+                        cells[pos[0]][pos[1]] = 3;
                     }
                     return "sunk:" + hitShip.getName();
                 }
             }
             return "hit";
-        } else if (cells[row][col] == 0) {
-            cells[row][col] = 4; // miss
-            return "miss";
-        } else {
-            // ya fue disparado
-            return "already";
         }
+
+        if (cells[row][col] == 0) {
+            cells[row][col] = 4;
+            return "miss";
+        }
+
+        return "already";
     }
-
-
 
     public Ship getShipAt(int row, int col) {
         for (Ship ship : ships) {
-            int[][] pos = ship.getPositions();
-            for (int[] p : pos) {
-                if (p[0] == row && p[1] == col) return ship;
+            for (int[] pos : ship.getPositions()) {
+                if (pos[0] == row && pos[1] == col) {
+                    return ship;
+                }
             }
         }
         return null;
     }
+
 
     public boolean allShipsSunk() {
         for (Ship ship : ships) {
@@ -111,34 +114,9 @@ public class Board implements Serializable {
         return true;
     }
 
-    public void clear() {
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                cells[r][c] = 0;
-            }
-        }
-        ships.clear();
-    }
-
     // Métodos de utilidad para el UI
     public boolean isShotRepeated(int row, int col) {
         int value = cells[row][col];
         return value == 2 || value == 3 || value == 4;
     }
-
-    public void rebuildShipsHitsFromCells() {
-        for (Ship ship : ships) {
-            int hitsCount = 0;
-            for (int[] pos : ship.getPositions()) {
-                int r = pos[0];
-                int c = pos[1];
-                if (cells[r][c] == 2 || cells[r][c] == 3) hitsCount++;
-            }
-            for (int i = 0; i < hitsCount; i++) {
-                ship.hit(); // registra los golpes previos
-            }
-        }
-    }
-
-
 }

@@ -13,7 +13,7 @@ public class GameStateHandler {
         private int size;
         private int row, col;
         private Orientation orientation;
-        private int hits;
+        private boolean[] hits;
 
         public ShipState(Ship ship) {
             name = ship.getName();
@@ -21,15 +21,18 @@ public class GameStateHandler {
             row = ship.getRow();
             col = ship.getColumn();
             orientation = ship.getOrientation();
-            hits = ship.getHits();
+            hits = ship.getHitsArray();
         }
+
+
 
         public Ship toShip() {
             Ship ship = new Ship(name, size);
             ship.place(row, col, orientation);
-            for (int i = 0; i < hits; i++) ship.hit();
+            ship.restoreHits(hits);
             return ship;
         }
+
     }
 
     public static class PlayerState implements Serializable {
