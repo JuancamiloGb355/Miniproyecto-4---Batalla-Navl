@@ -67,7 +67,6 @@ public class PositionController {
 
         setupGrid();
         renderBoard();
-        loadFleet();
 
         GameManager.getInstance().setPositionController(this);
     }
@@ -76,21 +75,37 @@ public class PositionController {
     public void initializeContinue() {
         btnStartGame.setVisible(false);
 
-        btnOrientation.setOnAction(e -> {
-            horizontal = !horizontal;
-            btnOrientation.setText(horizontal ? "Horizontal" : "Vertical");
-        });
+        // Bloquear orientación (ya no se colocan barcos)
+        btnOrientation.setDisable(true);
 
         setupGrid();
         renderBoard();
 
+        // 🧹 Vaciar flota (pero dejar el HBox)
+        fleetBox.getChildren().clear();
+
+        // 🚫 Desactivar drag & drop en el tablero
+        disableDragAndDrop();
+
         GameManager.getInstance().setPositionController(this);
     }
+
+    private void disableDragAndDrop() {
+        for (Node node : playerBoard.getChildren()) {
+            if (node instanceof StackPane cell) {
+                cell.setOnDragOver(null);
+                cell.setOnDragDropped(null);
+            }
+        }
+    }
+
+
 
     public void setupForNewGame(Player player) {
         this.player = player;
         shipsPlaced = 0;
         btnStartGame.setVisible(false);
+        loadFleet();
     }
 
     private void setupGrid() {
