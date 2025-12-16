@@ -72,6 +72,21 @@ public class PositionController {
         GameManager.getInstance().setPositionController(this);
     }
 
+    @FXML
+    public void initializeContinue() {
+        btnStartGame.setVisible(false);
+
+        btnOrientation.setOnAction(e -> {
+            horizontal = !horizontal;
+            btnOrientation.setText(horizontal ? "Horizontal" : "Vertical");
+        });
+
+        setupGrid();
+        renderBoard();
+
+        GameManager.getInstance().setPositionController(this);
+    }
+
     public void setupForNewGame(Player player) {
         this.player = player;
         shipsPlaced = 0;
@@ -241,64 +256,6 @@ public class PositionController {
             btnStartGame.setDisable(false);
         }
     }
-    // ----------------------------------------
-// Dibuja o reconstruye el tablero del jugador
-// ----------------------------------------
-    public void rebuildPlayerBoard() {
-        if (player == null) return;
-
-        // Limpiar imágenes previas de barcos y disparos
-        for (Node node : playerBoard.getChildren()) {
-            if (node instanceof StackPane cell) {
-                cell.getChildren().removeIf(child -> child instanceof ImageView);
-            }
-        }
-
-        // Dibujar barcos
-        for (Ship ship : player.getFleet()) {
-            int[][] pos = ship.getPositions();
-            int size = pos.length;
-            boolean horizontalShip = size > 1 && pos[0][0] == pos[1][0];
-
-            String imgName = getShipImageName(ship.getName());
-
-            Image img = loadImage("/edu/univalle/battleship/images/" + imgName);
-            if (img == null) continue;
-
-            ImageView view = new ImageView(img);
-            view.setMouseTransparent(true);
-            view.setFitWidth(40);
-            view.setFitHeight(40 * size);
-            if (horizontalShip) {
-                view.setRotate(-90);
-                view.setTranslateX((size - 1) * 20.0);
-            }
-
-            StackPane cell = getNodeFromGridPane(playerBoard, pos[0][0], pos[0][1]);
-            if (cell != null) {
-                GridPane.setRowIndex(view, pos[0][0]);
-                GridPane.setColumnIndex(view, pos[0][1]);
-                if (horizontalShip) GridPane.setColumnSpan(view, size);
-                else GridPane.setRowSpan(view, size);
-                playerBoard.getChildren().add(view);
-            }
-        }
-
-        // Dibujar disparos
-        int[][] cells = player.getBoard().getCells();
-        for (int r = 0; r < Board.SIZE; r++) {
-            for (int c = 0; c < Board.SIZE; c++) {
-                StackPane cell = getNodeFromGridPane(playerBoard, r, c);
-                if (cell == null) continue;
-
-                switch (cells[r][c]) {
-                    case 2 -> addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
-                    case 3 -> addImageToCell(cell, "/edu/univalle/battleship/images/sunk.png");
-                    case 4 -> addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
-                }
-            }
-        }
-    }
 
     // ----------------------------------------
 // Añade una imagen a una celda, con validación
@@ -353,4 +310,83 @@ public class PositionController {
             }
         }
     }
+    public void clearBoardView() {
+        for (Node node : playerBoard.getChildren()) {
+            if (node instanceof StackPane cell) {
+                cell.getChildren().clear();
+            }
+        }
+    }
+    public void restoreBoardCells(int[][] savedCells) {
+        int[][] cells = player.getBoard().getCells();
+        for (int r = 0; r < cells.length; r++) {
+            for (int c = 0; c < cells[r].length; c++) {
+                cells[r][c] = savedCells[r][c];
+            }
+        }
+    }
+
+    public void rebuildPlayerBoard() {
+        if (player == null) return;
+
+        // 🔹 Quitar SOLO imágenes (no el Rectangle)
+        for (Node node : playerBoard.getChildren()) {
+            if (node instanceof StackPane cell) {
+                cell.getChildren().removeIf(n -> n instanceof ImageView);
+            }
+        }
+
+        // 🔹 Dibujar barcos
+        for (Ship ship : player.getFleet()) {
+            int[][] pos = ship.getPositions();
+            int size = pos.length;
+            boolean horizontalShip = size > 1 && pos[0][0] == pos[1][0];
+
+            String imgName = getShipImageName(ship.getName());
+            Image img = loadImage("/edu/univalle/battleship/images/" + imgName);
+            if (img == null) continue;
+
+            ImageView view = new ImageView(img);
+            view.setMouseTransparent(true);
+            view.setFitWidth(40);
+            view.setFitHeight(40 * size);
+
+            if (horizontalShip) {
+                view.setRotate(-90);
+                view.setTranslateX((size - 1) * 20.0);
+            }
+
+            GridPane.setRowIndex(view, pos[0][0]);
+            GridPane.setColumnIndex(view, pos[0][1]);
+            if (horizontalShip) GridPane.setColumnSpan(view, size);
+            else GridPane.setRowSpan(view, size);
+
+            playerBoard.getChildren().add(view);
+        }
+    }
+
+    public void rebuildPlayerShotsOnly() {
+        if (player == null) return;
+
+        int[][] cells = player.getBoard().getCells();
+
+        for (int r = 0; r < Board.SIZE; r++) {
+            for (int c = 0; c < Board.SIZE; c++) {
+
+                StackPane cell = getNodeFromGridPane(playerBoard, r, c);
+                if (cell == null) continue;
+
+                // 🔹 quitar SOLO imágenes
+                cell.getChildren().removeIf(n -> n instanceof ImageView);
+
+                switch (cells[r][c]) {
+                    case 2 -> addImageToCell(cell, "/edu/univalle/battleship/images/hit.png");
+                    case 3 -> addImageToCell(cell, "/edu/univalle/battleship/images/sink.png");
+                    case 4 -> addImageToCell(cell, "/edu/univalle/battleship/images/miss.png");
+                }
+            }
+        }
+    }
+
+
 }

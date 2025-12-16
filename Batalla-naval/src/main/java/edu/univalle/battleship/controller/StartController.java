@@ -54,9 +54,6 @@ public class StartController {
         }
     }
 
-
-
-
     @FXML
     private Button continueButton;
 
@@ -88,7 +85,14 @@ public class StartController {
             gm.setPositionController(pc);
             gm.setPlayerBoardGrid(pc.getPlayerBoard());
             pc.setPlayer(loadedPlayer);
-            pc.rebuildPlayerBoard(); // Reconstruye barcos y disparos
+            pc.setPlayer(loadedPlayer);
+
+            // 1️⃣ primero barcos
+            pc.rebuildPlayerBoard();
+
+            // 2️⃣ luego hits / miss / sunk
+            pc.rebuildPlayerShotsOnly();
+
 
             // Ventana del enemigo
             FXMLLoader enemyLoader = new FXMLLoader(getClass().getResource("/edu/univalle/battleship/enemyPreviewView.fxml"));
@@ -105,7 +109,6 @@ public class StartController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         System.out.println("Partida cargada correctamente.");
     }
 
